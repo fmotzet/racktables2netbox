@@ -20,17 +20,18 @@ NetBox:
 Migrate:
   TAGS: False
   CUSTOM_ATTRIBUTES: False
-  INFRA: False
+  INFRA: True
   VLAN: False
   SUBNETS: False
   IPS: False
   HARDWARE: False
   PATCHPANELS: False
   PDUS: False
-  VMS: True
+  VMS: False
 #:===== Other settings:======== #
 Misc:
   DEFAULT_DEVICE_ROLE_ID: False # Numeral or False
+  DEFAULT_VM_CLUSTER_ID: 1
   SKIP_DEVICES_WITHOUT_TEMPLATE: True
   SKIP_OBJECTS_WITH_TAGS: romance
   CHILD_AS_BUILDING: True  # use RTs sub-location as Device42 building. If False, use it as a Device42 room.
