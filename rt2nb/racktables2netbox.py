@@ -621,98 +621,12 @@ class NETBOX(object):
 
             # exit(1)
 
-    # def post_location(self, data):
-    #     url = self.base_url + '/api/1.0/location/'
-    #     logger.info('Posting location data to {}'.format(url))
-    #     self.uploader(data, url)
-
-    # def post_room(self, data):
-    #     url = self.base_url + '/api/1.0/rooms/'
-    #     logger.info('Posting room data to {}'.format(url))
-    #     self.uploader(data, url)
-
-    # def post_rack(self, data):
-    #     url = self.base_url + '/api/1.0/racks/'
-    #     logger.info('Posting rack data to {}'.format(url))
-    #     response = self.uploader(data, url)
-    #     return response
-
-    # def post_pdu(self, data):
-    #     url = self.base_url + '/api/1.0/pdus/'
-    #     logger.info('Posting PDU data to {}'.format(url))
-    #     response = self.uploader(data, url)
-    #     return response
-
-    # def post_pdu_model(self, data):
-    #     url = self.base_url + '/api/1.0/pdu_models/'
-    #     logger.info('Posting PDU model to {}'.format(url))
-    #     response = self.uploader(data, url)
-    #     return response
-
-    # def post_pdu_to_rack(self, data, rack):
-    #     url = self.base_url + '/api/1.0/pdus/rack/'
-    #     logger.info('Posting PDU to rack {}'.format(rack))
-    #     self.uploader(data, url)
-
-    # def post_hardware(self, data, nb):
-    #     all_device_types = {str(item): item for item in nb.dcim.device_types.all()}
-    #     pp.pprint(all_device_types)
-    #     pp.pprint(data)
-    #     exit(2)
-
-    # def post_device2rack(self, data):
-    #     url = self.base_url + '/api/1.0/device/rack/'
-    #     logger.info('Adding device to rack at {}'.format(url))
-    #     self.uploader(data, url)
 
     def post_building(self, data):
         url = self.base_url + "/dcim/sites/"
         logger.info("Uploading building data to {}".format(url))
         self.uploader(data, url)
 
-    # def post_switchport(self, data):
-    #     url = self.base_url + '/api/1.0/switchports/'
-    #     logger.info('Uploading switchports data to {}'.format(url))
-    #     self.uploader(data, url)
-
-    # def post_patch_panel(self, data):
-    #     url = self.base_url + '/api/1.0/patch_panel_models/'
-    #     logger.info('Uploading patch panels data to {}'.format(url))
-    #     self.uploader(data, url)
-
-    # def post_patch_panel_module_models(self, data):
-    #     url = self.base_url + '/api/1.0/patch_panel_module_models/'
-    #     logger.info('Uploading patch panels modules data to {}}'.format(url))
-    #     self.uploader(data, url)
-
-    # def get_pdu_models(self):
-    #     url = self.base_url + '/api/1.0/pdu_models/'
-    #     logger.info('Fetching PDU models from {}'.format(url))
-    #     self.fetcher(url)
-
-    # def get_racks(self):
-    #     url = self.base_url + '/api/1.0/racks/'
-    #     logger.info('Fetching racks from {}'.format(url))
-    #     ata = self.fetcher(url)
-    #     return data
-
-    # def get_devices(self):
-    #     url = self.base_url + '/api/1.0/devices/'
-    #     logger.info('Fetching devices from {}'.format(url))
-    #     data = self.fetcher(url)
-    #     return data
-
-    # def get_buildings(self):
-    #     url = self.base_url + '/api/dcim/sites/'
-    #     logger.info('Fetching buildings from {}'.format(url))
-    #     data = self.fetcher(url)
-    #     return data
-
-    # def get_rooms(self):
-    #     url = self.base_url + '/api/1.0/rooms/'
-    #     logger.info('Fetching rooms from {}'.format(url))
-    #     data = self.fetcher(url)
-    #     return data
 
     # modified/sourced from from: https://github.com/minitriga/Netbox-Device-Type-Library-Import
     def slugFormat(self, name):
