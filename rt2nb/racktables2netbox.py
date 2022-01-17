@@ -457,13 +457,13 @@ class NETBOX(object):
         logger.debug("sending updates (if any) to nb")
         device.update(data)
 
-    def create_device_interfaces(self, dev_id, dev_ints, ip_ints, force_int_type = False,int_type=None):
+    def create_device_interfaces(self, dev_id, dev_ints, ip_ints, force_int_type=False, int_type=None):
         nb_device = py_netbox.dcim.devices.get(cf_rt_id=dev_id)
         dev_type = "device"
         if not nb_device:
             logger.debug("did not find a device with that rt_id, will check for a vm now")
             nb_device = py_netbox.virtualization.virtual_machines.get(cf_rt_id=dev_id)
-            
+
         if not nb_device:
             logger.error("did not find any device or with that rt_id")
             return False
@@ -485,17 +485,17 @@ class NETBOX(object):
                 print(f"{dev_int} not in nb_dev_ints, adding")
                 dev_data = {
                     # "device":nb_device.id,
-                    "name":dev_int,
-                    "type":int_type,
-                    "enabled":True,
-                    "description":description,
+                    "name": dev_int,
+                    "type": int_type,
+                    "enabled": True,
+                    "description": description,
                 }
                 print(dev_type)
                 if dev_type == "device":
-                    dev_data['device'] = nb_device.id
+                    dev_data["device"] = nb_device.id
                     response = py_netbox.dcim.interfaces.create(dev_data)
                 elif dev_type == "vm":
-                    dev_data['virtual_machine'] = nb_device.id
+                    dev_data["virtual_machine"] = nb_device.id
                     response = py_netbox.virtualization.interfaces.create(dev_data)
                 nb_dev_ints[dev_int] = response
             else:
@@ -511,7 +511,7 @@ class NETBOX(object):
                         "assigned_object_id": nb_dev_ints[dev_int].id,
                     }
                     if dev_type == "vm":
-                        ip_update['assigned_object_type'] = "virtualization.vminterface"
+                        ip_update["assigned_object_type"] = "virtualization.vminterface"
                     print(nb_ip.update(ip_update))
                 else:
                     print("could not find ip {ip} in nb")
@@ -548,18 +548,13 @@ class NETBOX(object):
                         int_type = dev_int[2].lower().split("dwdm80")[0].split("(")[0].strip()
                         if int_type in map_list.keys():
                             int_type = map_list[int_type]
-                    int_data = {
-                            "name":dev_int[0],
-                            "type":int_type,
-                            "enabled":connected,
-                            "description":description
-                        }
+                    int_data = {"name": dev_int[0], "type": int_type, "enabled": connected, "description": description}
                     if dev_type == "device":
-                        int_data['device'] = device=nb_device.id
-                        response = py_netbox.dcim.interfaces.create( int_data )
+                        int_data["device"] = device = nb_device.id
+                        response = py_netbox.dcim.interfaces.create(int_data)
                     elif dev_type == "vm":
-                        int_data['virtual_machine'] = nb_device.id
-                        response = py_netbox.virtualization.interfaces.create( int_data )
+                        int_data["virtual_machine"] = nb_device.id
+                        response = py_netbox.virtualization.interfaces.create(int_data)
                     nb_dev_ints[dev_int[0]] = response
                 else:
                     if not nb_dev_ints[dev_int[0]].description == description:
@@ -571,98 +566,67 @@ class NETBOX(object):
                         )
                 # print(response)
 
-    # def post_location(self, data):
-    #     url = self.base_url + '/api/1.0/location/'
-    #     logger.info('Posting location data to {}'.format(url))
-    #     self.uploader(data, url)
+    def get_sites_by_rt_id(self):
+        nb = self.py_netbox
+        sites = {str(item): dict(item) for item in nb.dcim.sites.all()}
+        sites_by_rt_id = {}
+        for site_name, site_data in sites.items():
+            rt_id = site_data["custom_fields"]["rt_id"]
+            if rt_id:
+                sites_by_rt_id[site_data["custom_fields"]["rt_id"]] = site_data
+        return sites_by_rt_id
 
-    # def post_room(self, data):
-    #     url = self.base_url + '/api/1.0/rooms/'
-    #     logger.info('Posting room data to {}'.format(url))
-    #     self.uploader(data, url)
+    def get_rooms_by_rt_id(self):
+        nb = self.py_netbox
+        locations = [dict(item) for item in nb.dcim.locations.all()]
+        # pp.pprint(locations)
+        locations_by_rt_id = {}
+        for location_data in locations:
+            rt_id = location_data["custom_fields"]["rt_id"]
+            if rt_id:
+                locations_by_rt_id[location_data["custom_fields"]["rt_id"]] = location_data
+        return locations_by_rt_id
 
-    # def post_rack(self, data):
-    #     url = self.base_url + '/api/1.0/racks/'
-    #     logger.info('Posting rack data to {}'.format(url))
-    #     response = self.uploader(data, url)
-    #     return response
+    def manage_rooms(self, roomsdata):
+        logger.debug("netbox:manage_rooms: starting")
+        nb = self.py_netbox
+        locations = [dict(item) for item in nb.dcim.locations.all()]
+        # pp.pprint(locations)
+        locations_by_rt_id = {}
+        for location_data in locations:
+            rt_id = location_data["custom_fields"]["rt_id"]
+            if rt_id:
+                locations_by_rt_id[location_data["custom_fields"]["rt_id"]] = location_data
+        # pp.pprint(locations_by_rt_id)
+        for room_id, room_data in roomsdata.items():
+            pp.pprint(room_data)
+            pp.pprint(locations_by_rt_id.keys())
+            if not str(room_data["row_id"]) in locations_by_rt_id.keys():
+                print(f"need to add location / row {room_data}")
+                nb_site = self.get_sites_by_rt_id()[str(room_data["site_id"])]
+                if nb_site:
+                    print("found matching site, lets create a location")
+                    nb_room_data = {
+                        "name": room_data["row_name"],
+                        "slug": str(slugify.slugify(room_data["row_name"], separator="_", replacements=[["/", ""], ["-", "_"]])),
+                        "site": nb_site["id"],
+                        "custom_fields": {"rt_id": str(room_data["row_id"])},
+                    }
+                    resp = nb.dcim.locations.create(nb_room_data)
+                    if resp:
+                        logger.debug(f"created location {room_data['row_name']} ")
+                    else:
+                        logger.error(f"failed to create location {room_data['row_name']} ")
+                        pp.pprint(room_data)
 
-    # def post_pdu(self, data):
-    #     url = self.base_url + '/api/1.0/pdus/'
-    #     logger.info('Posting PDU data to {}'.format(url))
-    #     response = self.uploader(data, url)
-    #     return response
+            # exit(1)
 
-    # def post_pdu_model(self, data):
-    #     url = self.base_url + '/api/1.0/pdu_models/'
-    #     logger.info('Posting PDU model to {}'.format(url))
-    #     response = self.uploader(data, url)
-    #     return response
-
-    # def post_pdu_to_rack(self, data, rack):
-    #     url = self.base_url + '/api/1.0/pdus/rack/'
-    #     logger.info('Posting PDU to rack {}'.format(rack))
-    #     self.uploader(data, url)
-
-    # def post_hardware(self, data, nb):
-    #     all_device_types = {str(item): item for item in nb.dcim.device_types.all()}
-    #     pp.pprint(all_device_types)
-    #     pp.pprint(data)
-    #     exit(2)
-
-    # def post_device2rack(self, data):
-    #     url = self.base_url + '/api/1.0/device/rack/'
-    #     logger.info('Adding device to rack at {}'.format(url))
-    #     self.uploader(data, url)
 
     def post_building(self, data):
         url = self.base_url + "/dcim/sites/"
         logger.info("Uploading building data to {}".format(url))
         self.uploader(data, url)
 
-    # def post_switchport(self, data):
-    #     url = self.base_url + '/api/1.0/switchports/'
-    #     logger.info('Uploading switchports data to {}'.format(url))
-    #     self.uploader(data, url)
-
-    # def post_patch_panel(self, data):
-    #     url = self.base_url + '/api/1.0/patch_panel_models/'
-    #     logger.info('Uploading patch panels data to {}'.format(url))
-    #     self.uploader(data, url)
-
-    # def post_patch_panel_module_models(self, data):
-    #     url = self.base_url + '/api/1.0/patch_panel_module_models/'
-    #     logger.info('Uploading patch panels modules data to {}}'.format(url))
-    #     self.uploader(data, url)
-
-    # def get_pdu_models(self):
-    #     url = self.base_url + '/api/1.0/pdu_models/'
-    #     logger.info('Fetching PDU models from {}'.format(url))
-    #     self.fetcher(url)
-
-    # def get_racks(self):
-    #     url = self.base_url + '/api/1.0/racks/'
-    #     logger.info('Fetching racks from {}'.format(url))
-    #     ata = self.fetcher(url)
-    #     return data
-
-    # def get_devices(self):
-    #     url = self.base_url + '/api/1.0/devices/'
-    #     logger.info('Fetching devices from {}'.format(url))
-    #     data = self.fetcher(url)
-    #     return data
-
-    # def get_buildings(self):
-    #     url = self.base_url + '/api/dcim/sites/'
-    #     logger.info('Fetching buildings from {}'.format(url))
-    #     data = self.fetcher(url)
-    #     return data
-
-    # def get_rooms(self):
-    #     url = self.base_url + '/api/1.0/rooms/'
-    #     logger.info('Fetching rooms from {}'.format(url))
-    #     data = self.fetcher(url)
-    #     return data
 
     # modified/sourced from from: https://github.com/minitriga/Netbox-Device-Type-Library-Import
     def slugFormat(self, name):
@@ -1204,9 +1168,10 @@ class NETBOX(object):
 
         else:
             logger.warning("remote device doesnt exist in nb yet. connections will be added when it gets added")
+
     def manage_vm(self, vm_data):
         nb = self.py_netbox
-        rt_id = vm_data['custom_fields']["rt_id"]
+        rt_id = vm_data["custom_fields"]["rt_id"]
         vm_data = self.get_vm_cluster_from_device(vm_data)
         pp.pprint(vm_data)
         device_check = nb.virtualization.virtual_machines.get(cf_rt_id=rt_id)
@@ -1216,42 +1181,35 @@ class NETBOX(object):
         else:
             logger.debug("did not find an existing vm in nb, will add!")
             new_device = nb.virtualization.virtual_machines.create(vm_data)
-    
+
     def get_vm_cluster_from_device(self, vm_data):
         nb = self.py_netbox
-        vm_data['cluster'] = str(config['Misc']['DEFAULT_VM_CLUSTER_ID'])
+        vm_data["cluster"] = str(config["Misc"]["DEFAULT_VM_CLUSTER_ID"])
         if "rt_id_parent" in vm_data["custom_fields"].keys():
-            
-            cluster = nb.virtualization.clusters.get(cf_rt_id=vm_data["custom_fields"]['rt_id_parent'])
+
+            cluster = nb.virtualization.clusters.get(cf_rt_id=vm_data["custom_fields"]["rt_id_parent"])
             if cluster:
                 logger.debug(f"cluster {cluster.name} found in nb")
-                vm_data['cluster'] = cluster.id
+                vm_data["cluster"] = cluster.id
             else:
-                parent_device = nb.dcim.devices.get(cf_rt_id=vm_data['custom_fields']["rt_id_parent"])
-                if parent_device: 
+                parent_device = nb.dcim.devices.get(cf_rt_id=vm_data["custom_fields"]["rt_id_parent"])
+                if parent_device:
                     logger.debug(f"parent {parent_device.name} found in nb, attempting to create matching cluster")
                     cluster_type = nb.virtualization.cluster_types.get(name="rt_import")
-                    if not cluster_type: 
-                        cluster_type = nb.virtualization.cluster_types.create({
-                            "name": "rt_import",
-                            "slug": "rt_import"
-                        })
+                    if not cluster_type:
+                        cluster_type = nb.virtualization.cluster_types.create({"name": "rt_import", "slug": "rt_import"})
                         if not cluster_type:
                             logger.debug("something went wrong. defaulting clusterid to conf")
                             return vm_data
-                    cluster = nb.virtualization.clusters.create({
-                        "name": parent_device.name,
-                        "type": cluster_type.id,
-                        "custom_fields": { "rt_id": vm_data['custom_fields']["rt_id_parent"] }
-                     })
+                    cluster = nb.virtualization.clusters.create(
+                        {"name": parent_device.name, "type": cluster_type.id, "custom_fields": {"rt_id": vm_data["custom_fields"]["rt_id_parent"]}}
+                    )
                     if cluster:
                         logger.debug(f"cluster {cluster.name} created")
-                        parent_device.update({"cluster":cluster.id})
-                        vm_data['cluster'] = cluster.id
-                
+                        parent_device.update({"cluster": cluster.id})
+                        vm_data["cluster"] = cluster.id
+
         return vm_data
-
-
 
 
 class DB(object):
@@ -1814,7 +1772,7 @@ class DB(object):
         for rec in raw:
             rack_id, rack_name, height, row_id, row_name, location_id, location_name, asset_no, comment = rec
 
-            rows_map.update({row_name: location_name})
+            rows_map.update({row_id: {"site_name": location_name, "site_id": location_id, "row_name": row_name, "row_id": row_id}})
 
             # prepare rack data. We will upload it a little bit later
             rack = {}
@@ -1829,22 +1787,18 @@ class DB(object):
                 rack["comments"] = ""
             rack.update({"room": row_name})
             rack.update({"building": location_name})
+            rack.update({"row_rt_id": str(row_id)})
 
             racks.append(rack)
         pprint.pprint(racks)
 
-        # # upload rows as rooms
-        # if config['Misc']['ROW_AS_ROOM']:
-        #     if config['Log']['DEBUG'] == True:
-        #         msg = ('Rooms', str(rows_map))
-        #         logger.debug(msg)
-        #     print("roomdata:")
-        #     for room, parent in list(rows_map.items()):
-        #         roomdata = {}
-        #         roomdata.update({'name': room})
-        #         roomdata.update({'building': parent})
-        #         # netbox.post_room(roomdata)
-        #         print(roomdata)
+        # upload rows as rooms
+        if config["Log"]["DEBUG"] == True:
+            msg = ("Rooms", str(rows_map))
+            logger.debug(msg)
+        # print("roomdata:")
+        netbox.manage_rooms(rows_map)
+        rooms_by_rt_id = netbox.get_rooms_by_rt_id()
 
         # upload racks
         if config["Log"]["DEBUG"]:
@@ -1875,6 +1829,8 @@ class DB(object):
                 netbox_rack["u_height"] = 100
             else:
                 netbox_rack["u_height"] = rack["size"]
+            if rack["row_rt_id"] in rooms_by_rt_id.keys():
+                netbox_rack["location"] = rooms_by_rt_id[rack["row_rt_id"]]["id"]
             logger.debug(netbox_rack)
             netbox.post_rack(netbox_rack)
             # response = netbox.post_rack(rack)
@@ -3147,7 +3103,7 @@ class DB(object):
             return data
         else:
             return False
-    
+
     # to remove duplication in get pdus devices patchpanels
     def manage_interfaces_obj(self, obj_type, obj_id, obj_name):
         ports = self.get_ports_by_device(self.all_ports, obj_id)
@@ -3297,6 +3253,7 @@ class DB(object):
             return False, tags
         else:
             return True, tags
+
     def get_vms(self):
         if not self.all_ports:
             self.get_ports()
@@ -3319,7 +3276,7 @@ class DB(object):
             vm_data = {}
             id, name, label, objtypeid, asset_no, has_problems, comment = vm_data_tupple
             logger.debug(f"start of vm: {id} {name}")
-           
+
             # vm_data["id"] = id
             vm_data["name"] = name
             vm_data["asset_tag"] = asset_no
@@ -3331,7 +3288,7 @@ class DB(object):
 
             tag_resp = self.get_tags_of_obj_false_if_skip(id)
             if tag_resp[0]:
-                vm_data['tags'] = tag_resp[1]
+                vm_data["tags"] = tag_resp[1]
             else:
                 logger.debug(f"end of vm: {name} due to skipped tags")
                 continue
