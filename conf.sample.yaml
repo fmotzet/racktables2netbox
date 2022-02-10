@@ -34,6 +34,7 @@ Misc:
   DEFAULT_VM_CLUSTER_ID: 1
   SKIP_DEVICES_WITHOUT_TEMPLATE: True
   SKIP_OBJECTS_WITH_TAGS: Decommissioned_gone
+  vm_objtype_ids: ",1507,50189"
   CUSTOM_FIELD_MAPPER: 
     OEM S/N 1: serial
   hardware_data_filter: >-
