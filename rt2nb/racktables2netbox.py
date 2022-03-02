@@ -2628,7 +2628,8 @@ class DB(object):
                         # pp.pprint("got here")
                         # print("")
                         ports = self.get_ports_by_device(self.all_ports, dev_id)
-                        # pp.pprint(ports)
+                        print("ports:")
+                        pp.pprint(ports)
 
                         ip_ints = self.get_devices_ips_ints(dev_id)
                         # pp.pprint(ip_ints)
