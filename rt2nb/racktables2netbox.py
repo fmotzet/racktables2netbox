@@ -458,9 +458,11 @@ class NETBOX(object):
         device.update(data)
 
     def create_device_interfaces(self, dev_id, dev_ints, ip_ints, force_int_type=False, int_type=None):
-        nb_device = py_netbox.dcim.devices.get(cf_rt_id=dev_id)
-        dev_type = "device"
         print(f"checking for device via rt_dev_id:{dev_id}")
+        nb_device = py_netbox.dcim.devices.get(cf_rt_id=str(dev_id))
+        print(dict(nb_device))
+        dev_type = "device"
+        
         if not nb_device:
             logger.debug("did not find a device with that rt_id, will check for a vm now")
             nb_device = py_netbox.virtualization.virtual_machines.get(cf_rt_id=dev_id)
