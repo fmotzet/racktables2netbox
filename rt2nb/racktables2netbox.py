@@ -463,11 +463,11 @@ class NETBOX(object):
         print(dict(nb_device))
         dev_type = "device"
         
-        if not nb_device:
+        if not nb_device.id:
             logger.debug("did not find a device with that rt_id, will check for a vm now")
             nb_device = py_netbox.virtualization.virtual_machines.get(cf_rt_id=dev_id)
 
-        if not nb_device:
+        if not nb_device.id:
             logger.error("did not find any device or with that rt_id")
             return False
         else:
