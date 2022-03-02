@@ -2585,6 +2585,7 @@ class DB(object):
                 if not "site" in devicedata.keys():
                     netbox_sites_by_comment = netbox.get_sites_keyd_by_description()
                     devicedata["site"] = netbox_sites_by_comment[rlocation_name]["id"]
+                if not "device_role" in devicedata.keys():
                     devicedata["device_role"] = config["Misc"]["DEFAULT_DEVICE_ROLE_ID"]
 
                 if not "hardware" in devicedata.keys():
