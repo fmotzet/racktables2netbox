@@ -480,6 +480,7 @@ class NETBOX(object):
         if not int_type:
             int_type = "other"
         for dev_int in ip_ints:
+            print(dev_int)
             description = f"{dev_int[2]} rt_import"
             pp.pprint(nb_dev_ints)
             if not dev_int in nb_dev_ints.keys():
@@ -2201,7 +2202,7 @@ class DB(object):
             cur = self.con.cursor()
             # get object IDs
             q = f"SELECT id FROM Object WHERE "
-            q = q + "Object.id >= 2784 and "
+            q = q + "Object.id >= 3409 and "
             q = q + f"""{config["Misc"]["device_data_filter_obj_only"]} """
             cur.execute(q)
             idsx = cur.fetchall()
