@@ -1095,11 +1095,15 @@ class NETBOX(object):
 
         for rt_id, name in rt_sites_map.items():
             if config['Misc']['SITE_NAME_CLEANUP']:
+                description = copy(name)
                 name = name.split(' (')[0]
+            site_data = {"description": description, "name": name, "slug": slugify.slugify(name), "custom_fields": {"rt_id": str(rt_id)}}
             if not name in current_sites:
                 pp.pprint(f"{name} not in netbox, adding")
-                site_data = {"description": name, "name": name, "slug": slugify.slugify(name), "custom_fields": {"rt_id": str(rt_id)}}
                 print(nb.dcim.sites.create(site_data))
+            else:
+                site = nb.dcim.sites.get(name)
+                site.update(site_data)
 
     def create_cable(self, int_1_id, int_2_id):
         nb = self.py_netbox
