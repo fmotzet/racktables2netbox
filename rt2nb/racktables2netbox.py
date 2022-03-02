@@ -2556,6 +2556,7 @@ class DB(object):
                     print(f"rack name: {rrack_name}")
                     rack_detail = dict(py_netbox.dcim.racks.get(name=rrack_name))
                     rack_id = rack_detail["id"]
+                    pp.pprint(rack_detail)
                     devicedata.update({"rack": rack_id})
                     devicedata.update({"site": rack_detail.site})
                     devicedata.update({"location": rack_detail.location})
