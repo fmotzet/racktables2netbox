@@ -460,7 +460,7 @@ class NETBOX(object):
     def create_device_interfaces(self, dev_id, dev_ints, ip_ints, force_int_type=False, int_type=None):
         print(f"checking for device via rt_dev_id:{dev_id}")
         nb_device = py_netbox.dcim.devices.get(cf_rt_id=str(dev_id))
-        print(dict(nb_device))
+        # print(dict(nb_device))
         dev_type = "device"
         
         if not "id" in dict(nb_device).keys():
@@ -2515,7 +2515,7 @@ class DB(object):
                 rrack_name = zero_location_obj_data[1]
                 print(zero_location_obj_data)
                 print(f"obj location (probably 0u device): {rlocation_name}")
-                print(f"rack id: {rrack_id}, rack name: {rrack_name}")
+                print(f"rackid: {rrack_id}, rackname: {rrack_name}")
 
             if name:
                 # set device data
