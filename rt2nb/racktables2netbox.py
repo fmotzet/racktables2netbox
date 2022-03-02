@@ -1095,7 +1095,7 @@ class NETBOX(object):
 
         for rt_id, name in rt_sites_map.items():
             if config['Misc']['SITE_NAME_CLEANUP']:
-                description = copy(name)
+                description = copy.deepcopy(name)
                 name = name.split(' (')[0]
             site_data = {"description": description, "name": name, "slug": slugify.slugify(name), "custom_fields": {"rt_id": str(rt_id)}}
             if not name in current_sites:
