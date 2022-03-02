@@ -2558,8 +2558,9 @@ class DB(object):
                     rack_id = rack_detail["id"]
                     pp.pprint(rack_detail)
                     devicedata.update({"rack": rack_id})
-                    devicedata.update({"site": rack_detail.site})
-                    devicedata.update({"location": rack_detail.location})
+                    devicedata.update({"site": rack_detail['site']['id']})
+                    if rack_detail['location']['id']:
+                        devicedata.update({"location": rack_detail['location']['id']})
                     d42_rack_id = rack_id
 
                     # if the device is mounted in RT, we will try to add it to D42 hardwares.
