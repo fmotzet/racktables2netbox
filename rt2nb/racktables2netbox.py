@@ -2578,6 +2578,8 @@ class DB(object):
                     depth = 0
                     devicedata.update({"rack": None})
                     devicedata.update({"location": None})
+                    devicedata.update({"face": None})
+                    devicedata.update({"position": None})
 
 
                 if not "site" in devicedata.keys():
