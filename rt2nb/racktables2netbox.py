@@ -484,7 +484,10 @@ class NETBOX(object):
 
         for dev_int in ip_ints:
             print(dev_int)
-            description = f"{dev_int[2]} rt_import"
+            if dev_int[2]:
+                description = f"{dev_int[2]} rt_import"
+            else:
+                description = "rt_import"
             pp.pprint(nb_dev_ints)
             if not dev_int in nb_dev_ints.keys():
                 print(f"{dev_int} not in nb_dev_ints, adding")
