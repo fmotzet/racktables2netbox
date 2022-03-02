@@ -479,6 +479,9 @@ class NETBOX(object):
         # pp.pprint(nb_dev_ints)
         if not int_type:
             int_type = "other"
+        print(f"dev_ints:{dev_ints}")
+        print(f"ip_ints: {ip_ints}")
+
         for dev_int in ip_ints:
             print(dev_int)
             description = f"{dev_int[2]} rt_import"
