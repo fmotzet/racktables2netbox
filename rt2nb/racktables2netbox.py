@@ -2515,6 +2515,7 @@ class DB(object):
                 rrack_name = zero_location_obj_data[1]
                 print(zero_location_obj_data)
                 print(f"obj location (probably 0u device): {rlocation_name}")
+                print(f"rack id: {rrack_id}, rack name: {rrack_name}")
 
             if name:
                 # set device data
