@@ -2551,31 +2551,34 @@ class DB(object):
                         pass
 
                 d42_rack_id = None
-                # except VMs
+                
+                if rrack_id:
+                    print(f"rack name: {rrack_name}")
+                    rack_detail = dict(py_netbox.dcim.racks.get(name=rrack_name))
+                    rack_id = rack_detail["id"]
+                    devicedata.update({"rack": rack_id})
+                    devicedata.update({"site": rack_detail.site})
+                    devicedata.update({"location": rack_detail.location})
+                    d42_rack_id = rack_id
 
-                if dev_type != 1504:
-                    if rrack_id:
-                        rack_detail = dict(py_netbox.dcim.racks.get(name=rrack_name))
-                        rack_id = rack_detail["id"]
-                        devicedata.update({"rack": rack_id})
-                        d42_rack_id = rack_id
-
-                        # if the device is mounted in RT, we will try to add it to D42 hardwares.
-                        position, height, depth, mount = self.get_hardware_size(dev_id)
-                        devicedata.update({"position": position})
-                        devicedata.update({"face": mount})
-                        # 0u device logic
-                        if height == None and not zero_location_obj_data == None:
-                            height = 0
-                            depth = 0
-                    else:
+                    # if the device is mounted in RT, we will try to add it to D42 hardwares.
+                    position, height, depth, mount = self.get_hardware_size(dev_id)
+                    devicedata.update({"position": position})
+                    devicedata.update({"face": mount})
+                    # 0u device logic
+                    if height == None and not zero_location_obj_data == None:
                         height = 0
                         depth = 0
+                else:
+                    height = 0
+                    depth = 0
 
-                netbox_sites_by_comment = netbox.get_sites_keyd_by_description()
-                devicedata["site"] = netbox_sites_by_comment[rlocation_name]["id"]
-                devicedata["device_role"] = config["Misc"]["DEFAULT_DEVICE_ROLE_ID"]
-                # devicedata['device_type'] = 22
+
+                if not "site" in devicedata.keys():
+                    netbox_sites_by_comment = netbox.get_sites_keyd_by_description()
+                    devicedata["site"] = netbox_sites_by_comment[rlocation_name]["id"]
+                    devicedata["device_role"] = config["Misc"]["DEFAULT_DEVICE_ROLE_ID"]
+
                 if not "hardware" in devicedata.keys():
                     if height == None:
                         height = 0
