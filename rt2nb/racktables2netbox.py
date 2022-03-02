@@ -1094,6 +1094,8 @@ class NETBOX(object):
         current_sites = [str(item) for item in nb.dcim.sites.all()]
 
         for rt_id, name in rt_sites_map.items():
+            if config['Misc']['SITE_NAME_CLEANUP']:
+                name = name.split(' (')[0]
             if not name in current_sites:
                 pp.pprint(f"{name} not in netbox, adding")
                 site_data = {"description": name, "name": name, "slug": slugify.slugify(name), "custom_fields": {"rt_id": str(rt_id)}}

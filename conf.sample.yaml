@@ -32,6 +32,7 @@ Migrate:
 Misc:
   DEFAULT_DEVICE_ROLE_ID: 1 # Numeral or False
   DEFAULT_VM_CLUSTER_ID: 1
+  SITE_NAME_CLEANUP: True
   SKIP_DEVICES_WITHOUT_TEMPLATE: True
   SKIP_OBJECTS_WITH_TAGS: Decommissioned_gone
   vm_objtype_ids: ",1507,50189"
