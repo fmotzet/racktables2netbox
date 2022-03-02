@@ -484,7 +484,7 @@ class NETBOX(object):
 
         for dev_int in ip_ints:
             print(dev_int)
-            if dev_int[2]:
+            if dev_int.isinstance(list):
                 description = f"{dev_int[2]} rt_import"
             else:
                 description = "rt_import"
