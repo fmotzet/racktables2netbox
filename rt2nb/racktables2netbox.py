@@ -466,13 +466,11 @@ class NETBOX(object):
         if not "id" in dict(nb_device).keys():
             logger.debug("did not find a device with that rt_id, will check for a vm now")
             nb_device = py_netbox.virtualization.virtual_machines.get(cf_rt_id=dev_id)
+            dev_type = "vm"
 
         if not "id" in dict(nb_device).keys():
             logger.error("did not find any device or with that rt_id")
             return False
-        else:
-            logger.debug("found vm")
-            dev_type = "vm"
 
         if dev_type == "device":
             nb_dev_ints = {str(item): item for item in self.py_netbox.dcim.interfaces.filter(device_id=int(nb_device.id))}
