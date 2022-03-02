@@ -2632,7 +2632,8 @@ class DB(object):
                         pp.pprint(ports)
 
                         ip_ints = self.get_devices_ips_ints(dev_id)
-                        # pp.pprint(ip_ints)
+                        print("ip_ints: ")
+                        pp.pprint(ip_ints)
                         netbox.create_device_interfaces(dev_id, ports, ip_ints)
                         # ports = False
                         if ports:
