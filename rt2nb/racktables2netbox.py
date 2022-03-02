@@ -1102,7 +1102,7 @@ class NETBOX(object):
                 pp.pprint(f"{name} not in netbox, adding")
                 print(nb.dcim.sites.create(site_data))
             else:
-                site = nb.dcim.sites.get(name)
+                site = nb.dcim.sites.get(name=name)
                 site.update(site_data)
 
     def create_cable(self, int_1_id, int_2_id):
