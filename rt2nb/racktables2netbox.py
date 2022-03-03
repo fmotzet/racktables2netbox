@@ -489,7 +489,7 @@ class NETBOX(object):
             else:
                 description = "rt_import"
             pp.pprint(nb_dev_ints)
-            if not dev_int in nb_dev_ints.keys():
+            if not dev_int.strip('\t') in nb_dev_ints.keys():
                 print(f"{dev_int} not in nb_dev_ints, adding")
                 dev_data = {
                     # "device":nb_device.id,
