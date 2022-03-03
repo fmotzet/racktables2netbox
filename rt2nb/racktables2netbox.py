@@ -1682,7 +1682,8 @@ class DB(object):
             print(line)
             lookup_name = copy.deepcopy(description)
             description = re.sub(r"\W+", "", description)
-            groups_by_rt_id[lookup_name] = nb_groups[description]
+            groups_obj = nb_groups[lookup_name]
+            groups_by_rt_id[id] = groups_obj
         self.vlan_group_map = groups_by_rt_id
 
     def create_vlan_nb_map(self):
