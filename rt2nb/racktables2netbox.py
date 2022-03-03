@@ -7,6 +7,7 @@ import json
 import logging
 from os import replace
 import pprint
+from types import NoneType
 import pymysql
 import pynetbox
 import requests
@@ -463,7 +464,7 @@ class NETBOX(object):
         # print(dict(nb_device))
         dev_type = "device"
         
-        if not "id" in dict(nb_device).keys():
+        if isinstance(nb_device, NoneType):
             logger.debug("did not find a device with that rt_id, will check for a vm now")
             nb_device = py_netbox.virtualization.virtual_machines.get(cf_rt_id=dev_id)
             dev_type = "vm"
