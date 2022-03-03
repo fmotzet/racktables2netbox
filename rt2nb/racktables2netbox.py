@@ -1680,7 +1680,7 @@ class DB(object):
         for line in resp:
             id, group_id, description = line
             print(line)
-            lookup_name = description
+            lookup_name = copy.deepcopy(description)
             description = re.sub(r"\W+", "", description)
             groups_by_rt_id[lookup_name] = nb_groups[description]
         self.vlan_group_map = groups_by_rt_id
