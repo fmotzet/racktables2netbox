@@ -483,13 +483,13 @@ class NETBOX(object):
         print(f"ip_ints: {ip_ints}")
 
         for dev_int in ip_ints:
-            print(dev_int)
+            dev_int = dev_int.strip('\t') # somehow i found an interafce with a tab at the end..
             if isinstance(dev_int, list):
                 description = f"{dev_int[2]} rt_import"
             else:
                 description = "rt_import"
             pp.pprint(nb_dev_ints)
-            if not dev_int.strip('\t') in nb_dev_ints.keys():
+            if not dev_int in nb_dev_ints.keys(): 
                 print(f"{dev_int} not in nb_dev_ints, adding")
                 dev_data = {
                     # "device":nb_device.id,
@@ -1679,6 +1679,7 @@ class DB(object):
 
         for line in resp:
             id, group_id, description = line
+            print(line)
             description = re.sub(r"\W+", "", description)
             groups_by_rt_id[id] = nb_groups[description]
         self.vlan_group_map = groups_by_rt_id
