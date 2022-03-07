@@ -2536,7 +2536,7 @@ class DB(object):
 
             # 0u device logic
             zero_location_obj_data = None
-            if rlocation_name == None:
+            if rlocation_name == None and process_object:
                 zero_location_obj_data = self.get_0u_obj_location(rt_object_id)
                 rlocation_name = zero_location_obj_data[5]
                 rrack_id = zero_location_obj_data[0]
