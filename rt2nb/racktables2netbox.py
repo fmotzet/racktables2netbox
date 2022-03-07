@@ -199,14 +199,16 @@ class NETBOX(object):
     def device_type_checker(self, device_model_name, attempt_import=True):
         if not self.device_types:
             self.device_types = {str(item.slug): dict(item) for item in self.py_netbox.dcim.device_types.all()}
+        if not attempt_import:
+            self.device_types = {str(item.slug): dict(item) for item in self.py_netbox.dcim.device_types.all()}
         slug_id = None
         if str(device_model_name) in device_type_map_preseed["by_key_name"].keys():
             logger.debug("hardware match")
             # print(str(devicedata['hardware']))
             nb_slug = device_type_map_preseed["by_key_name"][str(device_model_name)]["slug"]
-            if nb_slug in netbox.device_types:
+            if nb_slug in self.device_types:
                 logger.debug("found template in netbox")
-                slug_id = netbox.device_types[nb_slug]["id"]
+                slug_id = self.device_types[nb_slug]["id"]
             elif attempt_import:
                 logger.debug("did not find matching device template in netbox, attempting import")
                 self.post_device_type(device_model_name, device_type_map_preseed["by_key_name"][str(device_model_name)])
