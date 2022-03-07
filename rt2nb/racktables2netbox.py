@@ -1193,10 +1193,14 @@ class NETBOX(object):
         rt_id = vm_data["custom_fields"]["rt_id"]
         vm_data = self.get_vm_cluster_from_device(vm_data)
         pp.pprint(vm_data)
-        device_check = nb.virtualization.virtual_machines.get(cf_rt_id=rt_id)
-        if device_check:
+        device_check1 = nb.virtualization.virtual_machines.get(cf_rt_id=rt_id)
+        device_check2 = nb.virtualization.virtual_machines.get(name=vm_data['name'])
+        if device_check1:
             logger.debug("found existing vm in netbox, will update")
-            device_check.update(vm_data)
+            device_check1.update(vm_data)
+        elif device_check2:
+            logger.debug("found existing vm in netbox by name (dangerious)")
+            device_check2.update(vm_data)
         else:
             logger.debug("did not find an existing vm in nb, will add!")
             new_device = nb.virtualization.virtual_machines.create(vm_data)
