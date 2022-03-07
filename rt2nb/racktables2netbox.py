@@ -464,7 +464,7 @@ class NETBOX(object):
         nb_device = py_netbox.dcim.devices.get(cf_rt_id=str(dev_id))
         # print(dict(nb_device))
         dev_type = "device"
-        
+
         if isinstance(nb_device, type(None)):
             logger.debug("did not find a device with that rt_id, will check for a vm now")
             nb_device = py_netbox.virtualization.virtual_machines.get(cf_rt_id=dev_id)
@@ -487,13 +487,13 @@ class NETBOX(object):
         print(f"ip_ints: {ip_ints}")
 
         for dev_int in ip_ints:
-            dev_int = dev_int.strip('\t') # somehow i found an interafce with a tab at the end..
+            dev_int = dev_int.strip("\t")  # somehow i found an interafce with a tab at the end..
             if isinstance(dev_int, list):
                 description = f"{dev_int[2]} rt_import"
             else:
                 description = "rt_import"
             pp.pprint(nb_dev_ints)
-            if not dev_int in nb_dev_ints.keys(): 
+            if not dev_int in nb_dev_ints.keys():
                 print(f"{dev_int} not in nb_dev_ints, adding")
                 dev_data = {
                     # "device":nb_device.id,
@@ -634,12 +634,10 @@ class NETBOX(object):
 
             # exit(1)
 
-
     def post_building(self, data):
         url = self.base_url + "/dcim/sites/"
         logger.info("Uploading building data to {}".format(url))
         self.uploader(data, url)
-
 
     # modified/sourced from from: https://github.com/minitriga/Netbox-Device-Type-Library-Import
     def slugFormat(self, name):
@@ -1107,9 +1105,9 @@ class NETBOX(object):
         current_sites = [str(item) for item in nb.dcim.sites.all()]
 
         for rt_id, name in rt_sites_map.items():
-            if config['Misc']['SITE_NAME_CLEANUP']:
+            if config["Misc"]["SITE_NAME_CLEANUP"]:
                 description = copy.deepcopy(name)
-                name = name.split(' (')[0]
+                name = name.split(" (")[0]
             site_data = {"description": description, "name": name, "slug": slugify.slugify(name), "custom_fields": {"rt_id": str(rt_id)}}
             if not name in current_sites:
                 pp.pprint(f"{name} not in netbox, adding")
@@ -1194,7 +1192,7 @@ class NETBOX(object):
         vm_data = self.get_vm_cluster_from_device(vm_data)
         pp.pprint(vm_data)
         device_check1 = nb.virtualization.virtual_machines.get(cf_rt_id=rt_id)
-        device_check2 = nb.virtualization.virtual_machines.get(name=vm_data['name'])
+        device_check2 = nb.virtualization.virtual_machines.get(name=vm_data["name"])
         if device_check1:
             logger.debug("found existing vm in netbox, will update")
             device_check1.update(vm_data)
@@ -1233,12 +1231,12 @@ class NETBOX(object):
                         vm_data["cluster"] = cluster.id
 
         return vm_data
-    
+
     def remove_device_by_rt_id(self, rt_id):
         nb = self.py_netbox
         try:
             nb_device = nb.dcim.devices.get(cf_rt_id=str(rt_id))
-            
+
             if not dict(nb_device):
                 logger.info("found device in netbox by rt_id, removing")
                 nb_device.delete()
@@ -2585,16 +2583,16 @@ class DB(object):
                         pass
 
                 d42_rack_id = None
-                
+
                 if rrack_id:
                     print(f"rack name: {rrack_name}")
                     rack_detail = dict(py_netbox.dcim.racks.get(name=rrack_name))
                     rack_id = rack_detail["id"]
                     pp.pprint(rack_detail)
                     devicedata.update({"rack": rack_id})
-                    devicedata.update({"site": rack_detail['site']['id']})
-                    if rack_detail['location']['id']:
-                        devicedata.update({"location": rack_detail['location']['id']})
+                    devicedata.update({"site": rack_detail["site"]["id"]})
+                    if rack_detail["location"]["id"]:
+                        devicedata.update({"location": rack_detail["location"]["id"]})
                     d42_rack_id = rack_id
 
                     # if the device is mounted in RT, we will try to add it to D42 hardwares.
@@ -2612,7 +2610,6 @@ class DB(object):
                     devicedata.update({"location": None})
                     devicedata.update({"face": None})
                     devicedata.update({"position": None})
-
 
                 if not "site" in devicedata.keys():
                     netbox_sites_by_comment = netbox.get_sites_keyd_by_description()
