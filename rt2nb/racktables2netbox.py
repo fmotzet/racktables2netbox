@@ -524,9 +524,11 @@ class NETBOX(object):
                 if dev_type == "vm":
                     ip_update["assigned_object_type"] = "virtualization.vminterface"
                 if nb_ip:
+                    logger.debug("attempting to assign ip")
                     print(nb_ip.update(ip_update))
                 else:
                     ip_update["address"] = ip
+                    logger.debug(f"ip {ip} does not yet exist in nb. attempting create and assignment")
                     print(self.py_netbox.ipam.ip_addresses.create(ip_update))
 
         for dev_int in dev_ints:
