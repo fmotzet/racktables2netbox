@@ -3315,7 +3315,7 @@ class DB(object):
         with self.con:
             cur = self.con.cursor()
             q = f"SELECT * FROM Object "
-            q = q + f"WHERE Object.objtype_id in (1504 {config['Misc']['vm_objtype_ids']}) "
+            q = q + f"WHERE Object.objtype_id in (1504 {config['Misc']['vm_objtype_ids']}) ORDER BY Object.id desc"
             # q = q + " and Object.id = 7975 "
             # q = q + " limit 20"
             cur.execute(q)
