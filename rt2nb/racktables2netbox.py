@@ -1192,7 +1192,7 @@ class NETBOX(object):
         vm_data = self.get_vm_cluster_from_device(vm_data)
         pp.pprint(vm_data)
         device_check1 = nb.virtualization.virtual_machines.get(cf_rt_id=rt_id)
-        device_check2 = nb.virtualization.virtual_machines.get(name=vm_data["name"])
+        device_check2 = nb.virtualization.virtual_machines.get(name=vm_data["name"],cf_rt_id=None)
         if device_check1:
             logger.debug("found existing vm in netbox, will update")
             device_check1.update(vm_data)
