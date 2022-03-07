@@ -1227,6 +1227,18 @@ class NETBOX(object):
                         vm_data["cluster"] = cluster.id
 
         return vm_data
+    
+    def remove_device_by_rt_id(self, rt_id):
+        nb = self.py_netbox
+        try:
+            nb_device = nb.dcim.devices.get(cf_rt_id=str(rt_id))
+            
+            if not dict(nb_device):
+                logger.info("found device in netbox by rt_id, removing")
+                nb_device.delete()
+
+        except:
+            logger.info("failed to find / remove device from netbox")
 
 
 class DB(object):
@@ -2518,6 +2530,7 @@ class DB(object):
                 process_object = False
                 name = None
                 logger.info(f"skipping object rt_id:{rt_object_id} as it has tags: {str(bad_tags)}")
+                netbox.remove_device_by_rt_id(str(rt_object_id))
 
             # 0u device logic
             zero_location_obj_data = None
