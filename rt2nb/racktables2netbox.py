@@ -517,16 +517,18 @@ class NETBOX(object):
             for ip in ip_ints[dev_int]:
                 print(ip)
                 nb_ip = self.py_netbox.ipam.ip_addresses.get(address=ip)
+                ip_update = {
+                    "assigned_object_type": "dcim.interface",
+                    "assigned_object_id": nb_dev_ints[dev_int].id,
+                }
+                if dev_type == "vm":
+                    ip_update["assigned_object_type"] = "virtualization.vminterface"
                 if nb_ip:
-                    ip_update = {
-                        "assigned_object_type": "dcim.interface",
-                        "assigned_object_id": nb_dev_ints[dev_int].id,
-                    }
-                    if dev_type == "vm":
-                        ip_update["assigned_object_type"] = "virtualization.vminterface"
                     print(nb_ip.update(ip_update))
                 else:
-                    print("could not find ip {ip} in nb")
+                    ip_update["address"] = ip
+                    print(self.py_netbox.ipam.ip_addresses.create(ip_update))
+
         for dev_int in dev_ints:
 
             if not "AC-" in dev_int[2] and not "RS-232" in dev_int[2]:
@@ -1192,7 +1194,7 @@ class NETBOX(object):
         vm_data = self.get_vm_cluster_from_device(vm_data)
         pp.pprint(vm_data)
         device_check1 = nb.virtualization.virtual_machines.get(cf_rt_id=rt_id)
-        device_check2 = nb.virtualization.virtual_machines.get(name=vm_data["name"],cf_rt_id=None)
+        device_check2 = nb.virtualization.virtual_machines.get(name=vm_data["name"], cf_rt_id=None)
         if device_check1:
             logger.debug("found existing vm in netbox, will update")
             device_check1.update(vm_data)
