@@ -553,6 +553,7 @@ class NETBOX(object):
                             "empty qsfp": "100gbase-x-qsfp28",
                             "100gbase-sr4": "100gbase-x-qsfp28",
                             "100gbase-lr4": "100gbase-x-qsfp28",
+                            "100gbase-er4": "100gbase-x-qsfp28",
                             "empty x2": "other",
                         }
                         int_type = dev_int[2].lower().split("dwdm80")[0].split("(")[0].strip()
