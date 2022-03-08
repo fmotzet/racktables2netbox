@@ -1438,7 +1438,7 @@ class DB(object):
         Fetch subnets from RT and send them to upload function
         :return:
         """
-        subs = {}
+        
         if not self.vlan_group_map:
             self.create_vlan_domains_nb_group_map()
         if not self.vlan_map:
@@ -1457,9 +1457,11 @@ class DB(object):
             self.con = None
 
         for line in subnets:
+            subs = {}
             if not self.tag_map:
                 self.create_tag_map()
             sid, raw_sub, mask, name, comment, vlan_domain_id, vlan_id, ipv4net_id = line
+            print(line)
             subnet = self.convert_ip(raw_sub)
             rt_tags = self.get_tags_for_obj("ipv4net", sid)
             # print(rt_tags)
@@ -1478,7 +1480,7 @@ class DB(object):
                     vlan = self.vlan_map["{}_{}".format(vlan_domain_id, vlan_id)]["id"]
                     subs.update({"vlan": vlan})
                 except:
-                    # subs.update({"vlan": None})
+                    subs.update({"vlan": None})
                     logger.debug("failed to find vlan for subnet {}".format(subnet))
             subs.update({"prefix": "/".join([subnet, str(mask)])})
             subs.update({"status": "active"})
