@@ -2808,6 +2808,8 @@ class DB(object):
             netbox.post_ip(devmap)
 
     def get_pdus(self):
+        if not self.all_ports:
+            self.get_ports()
         if not self.con:
             self.connect()
         with self.con:
