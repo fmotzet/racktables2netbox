@@ -1478,6 +1478,7 @@ class DB(object):
                     vlan = self.vlan_map["{}_{}".format(vlan_domain_id, vlan_id)]["id"]
                     subs.update({"vlan": vlan})
                 except:
+                    subs.update({"vlan": None})
                     logger.debug("failed to find vlan for subnet {}".format(subnet))
             subs.update({"prefix": "/".join([subnet, str(mask)])})
             subs.update({"status": "active"})
