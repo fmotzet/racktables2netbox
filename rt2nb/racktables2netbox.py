@@ -2808,6 +2808,16 @@ class DB(object):
             netbox.post_ip(devmap)
 
     def get_pdus(self):
+        roles = {str(item.name): dict(item) for item in py_netbox.dcim.device_roles.all()}
+        pp.pprint(roles)
+        if not "Power" in roles.keys():
+            create_role = {
+                "name": "Power",
+                "slug": "power",
+            }
+            py_netbox.dcim.device_roles.create(create_role)
+            roles = {str(item.name): dict(item) for item in py_netbox.dcim.device_roles.all()}
+        PDU_DEVICE_ROLE = roles["Power"]["id"]
         if not self.all_ports:
             self.get_ports()
         if not self.con:
@@ -2933,7 +2943,7 @@ class DB(object):
                                 rdata.update({"position": position})
                                 rdata.update({"face": mount})
                                 rdata.update({"rack": rack_id})
-                                rdata["device_role"] = config["Misc"]["DEFAULT_DEVICE_ROLE_ID"]
+                                rdata["device_role"] = PDU_DEVICE_ROLE
                                 rdata["device_type"] = pdudata["device_type"]
                                 rdata.update({"name": pdudata["name"]})
                                 rdata["site"] = site_id
@@ -2993,7 +3003,7 @@ class DB(object):
                         # pdudata.update({"rack":rack_id})
                         try:
                             rdata.update({"rack": rack_id})
-                            rdata["device_role"] = config["Misc"]["DEFAULT_DEVICE_ROLE_ID"]
+                            rdata["device_role"] = PDU_DEVICE_ROLE
                             rdata["device_type"] = pdudata["device_type"]
                             rdata.update({"name": pdudata["name"]})
                             rdata["site"] = site_id
