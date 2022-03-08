@@ -2874,18 +2874,18 @@ class DB(object):
                     logger.info(f"skipping object rt_id:{pdu_id} as it has tags: {str(bad_tags)}")
                     continue
                 logger.info(f"pdu_attribs: {pdu_attribs}")
-                if not "HW type" in pdu_attribs:
+                if not "hw_type" in pdu_attribs:
                     # logger.info(f"skipping object rt_id:{pdu_id} as it has no hw type assigned")
                     # continue
                     if position:
-                        pdu_attribs["HW type"] = "generic_1u_short_device"
+                        pdu_attribs["hw_type"] = "generic_1u_short_device"
                     else:
-                        pdu_attribs["HW type"] = "generic_0u_device"
-                    logger.info(f"HW Type(position check) is: {pdu_attribs['HW type']}")
+                        pdu_attribs["hw_type"] = "generic_0u_device"
+                    logger.info(f"HW Type(position check) is: {pdu_attribs['hw_type']}")
 
                 # if "%GPASS%" in pdu_attribs['HW type']:
-                pdu_type = pdu_attribs["HW type"].replace("%GPASS%", " ")
-                del pdu_attribs["HW type"]
+                pdu_type = pdu_attribs["hw_type"].replace("%GPASS%", " ")
+                del pdu_attribs["hw_type"]
                 pdu_attribs["rt_id"] = str(pdu_id)
                 if "asset_tag" in pdu_attribs.keys():
                     del pdu_attribs["asset_tag"]
