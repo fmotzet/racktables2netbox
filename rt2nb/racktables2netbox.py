@@ -2944,6 +2944,11 @@ class DB(object):
                                 logger.debug(rdata)
                                 netbox.post_device(rdata)
                                 # netbox.post_pdu_to_rack(rdata, d42_rack_id)
+                                ports = self.get_ports_by_device(self.all_ports, pdu_id)
+
+                                ip_ints = self.get_devices_ips_ints(pdu_id)
+                                # pp.pprint(ip_ints)
+                                netbox.create_device_interfaces(id, ports, ip_ints)
                         # except TypeError:
                         #     msg = (
                         #         '\n-----------------------------------------------------------------------\
