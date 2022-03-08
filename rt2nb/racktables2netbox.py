@@ -3013,6 +3013,9 @@ class DB(object):
                                 % (name, pdu_id, str(rack_id))
                             )
                             logger.info(msg)
+                        ports = self.get_ports_by_device(self.all_ports, str(pdu_id))
+                        ip_ints = self.get_devices_ips_ints(str(pdu_id))
+                        netbox.create_device_interfaces(str(pdu_id), ports, ip_ints)
                     else:
                         logger.error(f"could not find rack for PDU rt_id: {pdu_id}")
         logger.debug("skipped devices:")
