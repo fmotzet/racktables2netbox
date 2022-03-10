@@ -3038,6 +3038,16 @@ class DB(object):
         pp.pprint(self.skipped_devices)
 
     def get_patch_panels(self):
+        roles = {str(item.name): dict(item) for item in py_netbox.dcim.device_roles.all()}
+        pp.pprint(roles)
+        if not "Patching" in roles.keys():
+            create_role = {
+                "name": "Patching",
+                "slug": "patching",
+            }
+            py_netbox.dcim.device_roles.create(create_role)
+            roles = {str(item.name): dict(item) for item in py_netbox.dcim.device_roles.all()}
+        PATCHING_DEVICE_ROLE = roles["Patching"]["id"]
         if not self.all_ports:
             self.get_ports()
         if not self.con:
@@ -3111,7 +3121,7 @@ class DB(object):
                 # "type": patch_type,
                 # "comments": item[4],
                 "custom_fields": attribs,
-                "device_role": config["Misc"]["DEFAULT_DEVICE_ROLE_ID"],
+                "device_role": PATCHING_DEVICE_ROLE,
                 "site": site_id,
             }
             if item[4]:
