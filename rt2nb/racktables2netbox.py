@@ -3004,7 +3004,8 @@ class DB(object):
                         # pdudata.update({"pdu_model": pdu_type})
                         # pdudata.update({"custom_fields": pdu_attribs})
                         # pdudata.update({"asset_tag": asset_num})
-                        # pdudata.update({"rack":rack_id})
+                        # pdudata.update({"rack":rack_id}) 
+                        device_added = False
                         try:
                             rdata.update({"rack": rack_id})
                             rdata["device_role"] = PDU_DEVICE_ROLE
@@ -3021,7 +3022,9 @@ class DB(object):
                             logger.info(f"adding 0U pdu: {rdata['name']}")
                             logger.debug(rdata)
                             netbox.post_device(rdata)
+                            device_added = True
                         except UnboundLocalError:
+                            device_added = False
                             msg = (
                                 '\n-----------------------------------------------------------------------\
                             \n[!] INFO: Cannot mount pdu "%s" (RT id = %d) to the rack.\
@@ -3029,9 +3032,10 @@ class DB(object):
                                 % (name, pdu_id, str(rack_id))
                             )
                             logger.info(msg)
-                        ports = self.get_ports_by_device(self.all_ports, str(pdu_id))
-                        ip_ints = self.get_devices_ips_ints(str(pdu_id))
-                        netbox.create_device_interfaces(str(pdu_id), ports, ip_ints)
+                        if device_added:
+                            ports = self.get_ports_by_device(self.all_ports, str(pdu_id))
+                            ip_ints = self.get_devices_ips_ints(str(pdu_id))
+                            netbox.create_device_interfaces(str(pdu_id), ports, ip_ints)
                     else:
                         logger.error(f"could not find rack for PDU rt_id: {pdu_id}")
         logger.debug("skipped devices:")
