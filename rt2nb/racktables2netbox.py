@@ -2941,12 +2941,16 @@ class DB(object):
                             rack_data = netbox.get_rack_by_rt_id(pdudata["rack"])
                             site_id = rack_data["site"]["id"]
                             rack_id = rack_data["id"]
-
+                            if rack_data["location"]["id"]:
+                                rack_location = rack_data["location"]["id"]
+                            else:
+                                rack_location = None
                             if position:
                                 rdata = {}
                                 rdata.update({"position": position})
                                 rdata.update({"face": mount})
                                 rdata.update({"rack": rack_id})
+                                rdata.update({"location": rack_location})
                                 rdata["device_role"] = PDU_DEVICE_ROLE
                                 rdata["device_type"] = pdudata["device_type"]
                                 rdata.update({"name": pdudata["name"]})
@@ -2993,6 +2997,10 @@ class DB(object):
                     rack_id = rack_data["id"]
                     # pp.pprint(dict(rack_data))
                     pdudata["rack"] = rack_id
+                    if rack_data["location"]["id"]:
+                        rack_location = rack_data["location"]["id"]
+                    else:
+                        rack_location = None
 
                     # exit(22)
                     if rack_id:
@@ -3012,6 +3020,7 @@ class DB(object):
                             rdata["device_type"] = pdudata["device_type"]
                             rdata.update({"name": pdudata["name"]})
                             rdata["site"] = site_id
+                            rdata["location"] = rack_location
                             rdata.update({"comments": pdudata["notes"]})
                             rdata["custom_fields"] = pdudata["custom_fields"]
                             if pdudata["asset_tag"]:
