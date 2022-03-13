@@ -1439,7 +1439,7 @@ class DB(object):
         Fetch subnets from RT and send them to upload function
         :return:
         """
-        
+
         if not self.vlan_group_map:
             self.create_vlan_domains_nb_group_map()
         if not self.vlan_map:
@@ -3004,7 +3004,7 @@ class DB(object):
                         # pdudata.update({"pdu_model": pdu_type})
                         # pdudata.update({"custom_fields": pdu_attribs})
                         # pdudata.update({"asset_tag": asset_num})
-                        # pdudata.update({"rack":rack_id}) 
+                        # pdudata.update({"rack":rack_id})
                         device_added = False
                         try:
                             rdata.update({"rack": rack_id})
