@@ -405,7 +405,7 @@ class NETBOX(object):
         self.createDeviceTypes([data], py_netbox)
         self.device_types = {str(item.slug): dict(item) for item in self.py_netbox.dcim.device_types.all()}
 
-    def post_device(self, data, py_netbox=None):
+    def post_device(self, data, py_netbox=None, has_problems=False):
         if not py_netbox:
             py_netbox = self.py_netbox
         needs_updating = False
@@ -430,9 +430,12 @@ class NETBOX(object):
                 matched_by = "name"
 
         if needs_updating:
-            self.update_device(data, matched_by, py_netbox)
+            self.update_device(data, matched_by, py_netbox, has_problems)
+
         else:
             try:
+                if has_problems:
+                    data["status"] = "failed"
                 py_netbox.dcim.devices.create(data)
             except pynetbox.RequestError as e:
                 logger.debug("matched request error")
@@ -446,9 +449,9 @@ class NETBOX(object):
                     matched_by = "name"
                     needs_updating = True
             if needs_updating:  # update existing device
-                self.update_device(data, matched_by, py_netbox)
+                self.update_device(data, matched_by, py_netbox, has_problems)
 
-    def update_device(self, data, match_type, py_netbox):
+    def update_device(self, data, match_type, py_netbox, has_problems=False):
 
         if match_type == "cf_rt_id":
             device = py_netbox.dcim.devices.get(cf_rt_id=data["custom_fields"]["rt_id"])
@@ -458,6 +461,16 @@ class NETBOX(object):
             device = py_netbox.dcim.devices.get(name=data["name"])
         logger.debug("sending updates (if any) to nb")
         device.update(data)
+        logger.info("checking to see if status is currently failed in nb")
+        if device.status == "failed":
+            if not has_problems:
+                device.update({"status": "active"})
+        if has_problems:
+            logger.info("device has_problems in rt")
+            if device.status == "active":
+                device.update({"status": "failed"})
+            else:
+                logger.info("will not update device status to failed as its been modified in NB")
 
     def create_device_interfaces(self, dev_id, dev_ints, ip_ints, force_int_type=False, int_type=None):
         print(f"checking for device via rt_dev_id:{dev_id}")
@@ -2268,7 +2281,8 @@ class DB(object):
                         Rack.location_name,
                         Location.parent_name,
                         COALESCE(AttributeValue.string_value,AttributeValue.uint_value,AttributeValue.float_value,'') as attrib_value,
-                        Attribute.type
+                        Attribute.type,
+                        Object.has_problems
 
                         FROM Object
                         left join Dictionary as Dictionary2 on Dictionary2.dict_key = Object.objtype_id
@@ -2441,6 +2455,7 @@ class DB(object):
                     rparent_name,
                     attrib_value,
                     attrib_type,
+                    has_problems,
                 ) = x
                 logger.debug(x)
                 if rdesc is None:
@@ -2512,6 +2527,11 @@ class DB(object):
 
                 if note:
                     note = note.replace("\n", "\n\n")  # markdown. all new lines need two new lines
+
+            if has_problems == "yes":
+                has_problems = True
+            else:
+                has_problems = False
 
             if hardware:
                 if note:
@@ -2655,7 +2675,7 @@ class DB(object):
                         devicedata.update({"type": "physical"})
 
                     logger.debug(json.dumps(devicedata))
-                    netbox.post_device(devicedata, py_netbox)
+                    netbox.post_device(devicedata, py_netbox, has_problems)
 
                     # update ports
                     if process_object:
@@ -2831,7 +2851,8 @@ class DB(object):
             q = """SELECT
                     
                     Object.id, Object.name, Object.label, asset_no, comment, unit_no, 
-                    RackSpace.atom as Position, (SELECT Object.id FROM Object WHERE Object.id = RackSpace.rack_id) as RackID
+                    RackSpace.atom as Position, (SELECT Object.id FROM Object WHERE Object.id = RackSpace.rack_id) as RackID,
+                    Object.has_problems
                     FROM Object
                     LEFT JOIN RackSpace ON RackSpace.object_id = Object.id
                     WHERE Object.objtype_id = 2
@@ -2859,7 +2880,11 @@ class DB(object):
             pdudata = {}
             line = ["" if x is None else x for x in line]
             # print(line)
-            pdu_id, name, label, asset_num, comment, unit_no, position, rack_id = line
+            pdu_id, name, label, asset_num, comment, unit_no, position, rack_id, has_problems = line
+            if has_problems == "yes":
+                has_problems = True
+            else:
+                has_problems = False
             if pdu_id not in processed_ids:  # query may return pdu_id multiple times, skip if already processed
                 processed_ids.append(pdu_id)
                 # pdu_id, name, asset, comment, pdu_type, position, rack_id = line
