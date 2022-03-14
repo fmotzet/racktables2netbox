@@ -1286,6 +1286,7 @@ class DB(object):
         self.building_room_map = {}
         self.skipped_devices = {}
         self.all_ports = None
+        self.nb_roles = None
 
     def custom_field_name_slugger(self, name):
         return str(slugify.slugify(name, separator="_", replacements=[["/", ""], ["-", "_"]]))
@@ -1320,6 +1321,18 @@ class DB(object):
     def convert_ip_v6(ip_raw):
         ip = socket.inet_ntop(socket.AF_INET6, ip_raw)
         return ip
+
+    def nb_role_id(self, role_name):
+        if not self.roles:
+            self.roles = {str(item.name): dict(item) for item in py_netbox.dcim.device_roles.all()}
+        if not role_name in self.roles.keys():
+            create_role = {
+                "name": role_name,
+                "slug": self.custom_field_name_slugger(role_name),
+            }
+            py_netbox.dcim.device_roles.create(create_role)
+            self.roles = {str(item.name): dict(item) for item in py_netbox.dcim.device_roles.all()}
+        return self.roles[role_name]["id"]
 
     def get_ips(self):
         """
@@ -2284,7 +2297,8 @@ class DB(object):
                         Location.parent_name,
                         COALESCE(AttributeValue.string_value,AttributeValue.uint_value,AttributeValue.float_value,'') as attrib_value,
                         Attribute.type,
-                        Object.has_problems
+                        Object.has_problems,
+                        Dictionary2.dict_value as object_class_type,
 
                         FROM Object
                         left join Dictionary as Dictionary2 on Dictionary2.dict_key = Object.objtype_id
@@ -2458,6 +2472,7 @@ class DB(object):
                     attrib_value,
                     attrib_type,
                     has_problems,
+                    object_class_type
                 ) = x
                 logger.debug(x)
                 if rdesc is None:
@@ -2645,8 +2660,8 @@ class DB(object):
                 if not "site" in devicedata.keys():
                     netbox_sites_by_comment = netbox.get_sites_keyd_by_description()
                     devicedata["site"] = netbox_sites_by_comment[rlocation_name]["id"]
-                if not "device_role" in devicedata.keys():
-                    devicedata["device_role"] = config["Misc"]["DEFAULT_DEVICE_ROLE_ID"]
+                
+                devicedata["device_role"] = self.nb_role_id(object_class_type)
 
                 if not "hardware" in devicedata.keys():
                     if height == None:
