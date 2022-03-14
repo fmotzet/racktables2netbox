@@ -1323,16 +1323,16 @@ class DB(object):
         return ip
 
     def nb_role_id(self, role_name):
-        if not self.roles:
-            self.roles = {str(item.name): dict(item) for item in py_netbox.dcim.device_roles.all()}
-        if not role_name in self.roles.keys():
+        if not self.nb_roles:
+            self.nb_roles = {str(item.name): dict(item) for item in py_netbox.dcim.device_roles.all()}
+        if not role_name in self.nb_roles.keys():
             create_role = {
                 "name": role_name,
                 "slug": self.custom_field_name_slugger(role_name),
             }
             py_netbox.dcim.device_roles.create(create_role)
-            self.roles = {str(item.name): dict(item) for item in py_netbox.dcim.device_roles.all()}
-        return self.roles[role_name]["id"]
+            self.nb_roles = {str(item.name): dict(item) for item in py_netbox.dcim.device_roles.all()}
+        return self.nb_roles[role_name]["id"]
 
     def get_ips(self):
         """
