@@ -2298,7 +2298,7 @@ class DB(object):
                         COALESCE(AttributeValue.string_value,AttributeValue.uint_value,AttributeValue.float_value,'') as attrib_value,
                         Attribute.type,
                         Object.has_problems,
-                        Dictionary2.dict_value as object_class_type,
+                        Dictionary2.dict_value as object_class_type
 
                         FROM Object
                         left join Dictionary as Dictionary2 on Dictionary2.dict_key = Object.objtype_id
