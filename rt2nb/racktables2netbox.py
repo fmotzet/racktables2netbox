@@ -468,6 +468,7 @@ class NETBOX(object):
         if has_problems:
             logger.info("device has_problems in rt")
             if str(device.status) == "Active":
+                logger.info("attempting to update device status")
                 device.update({"status": "failed"})
             else:
                 logger.info("will not update device status to failed as its been modified in NB")
