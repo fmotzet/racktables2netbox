@@ -435,7 +435,7 @@ class NETBOX(object):
         else:
             try:
                 if has_problems:
-                    data["status"] = "Failed"
+                    data["status"] = "failed"
                 py_netbox.dcim.devices.create(data)
             except pynetbox.RequestError as e:
                 logger.debug("matched request error")
@@ -464,11 +464,12 @@ class NETBOX(object):
         logger.info("checking to see if status is currently failed in nb")
         if str(device.status) == "Failed":
             if not has_problems:
+                logger.info("attempting to update device status to active")
                 device.update({"status": "active"})
         if has_problems:
             logger.info("device has_problems in rt")
             if str(device.status) == "Active":
-                logger.info("attempting to update device status")
+                logger.info("attempting to update device status to failed")
                 device.update({"status": "failed"})
             else:
                 logger.info("will not update device status to failed as its been modified in NB")
