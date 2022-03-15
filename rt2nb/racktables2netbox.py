@@ -73,6 +73,7 @@ class NETBOX(object):
         self.base_url = "{}/api".format(config["NetBox"]["NETBOX_HOST"])
         self.py_netbox = pynetboxobj
         self.all_ips = None
+        self.all_prefixes = None
         # Create HTTP connection pool
         self.s = requests.Session()
 
@@ -1361,14 +1362,25 @@ class DB(object):
             cur2.close()
             self.con = None
 
+        if not netbox.all_prefixes:
+            print("getting all prefixes(s) currently in netbox")
+            netbox.all_prefixes = {str(item): dict(item) for item in netbox.py_netbox.ipam.prefixes.all()}
+            # print(json.dumps(netbox.all_prefixes))
+            # exit()
+        nb_all_prefixes = netbox.all_prefixes
+
         if not netbox.all_ips:
             print("getting all ip(s) currently in netbox")
-            netbox.all_ips = {str(item): dict(item) for item in netbox.py_netbox.ipam.ip_addresses.all()}
+            netbox.all_ips = {str(item): item for item in netbox.py_netbox.ipam.ip_addresses.all()}
         nb_ips = netbox.all_ips
 
         print("checking ips")
         for line in ips:
             net = {}
+            found_matching_prefix = False
+            smallest_prefix = 0
+            found_prefix = None
+
             ip_raw, name, comment, reserved = line
             ip = self.convert_ip(ip_raw)
             adrese.append(ip)
@@ -1382,17 +1394,68 @@ class DB(object):
             msg = "Label: %s" % desc
             logger.info(msg)
             if not desc in ["network", "broadcast"]:
-                if not f"{ip}/32" in nb_ips:
+                # this is disgusting...
+                for prefix in nb_all_prefixes.keys():
+                    if ip in ipcalc.Network(prefix):
+                        print(f"ip: {ip} in prefix: {prefix}")
+                        subnet_size = prefix.split("/")[1]
+                        if int(subnet_size) > smallest_prefix:
+                            smallest_prefix = int(subnet_size)
+                            found_prefix = prefix
+                print(f"prefix to be used: {found_prefix}")
+                if smallest_prefix > 0:
+                    net['address'] = f"{ip}/{smallest_prefix}"
+                    net['display'] = net['address']
+                found_in_nb = False
+                found_in_nb_obj = None
+                for nb_ip in nb_ips.keys():
+                    if f"{ip}/" in nb_ip:
+                        found_in_nb = True
+                        found_in_nb_obj = nb_ips[nb_ip]
+                        print(f"found in nb!: {nb_ip}")
+                if found_in_nb:
+                    print("i should update the nb ip here")
+                    print(net)
+                    print(found_in_nb_obj)
+                    print(found_in_nb_obj.update(net))
+                    print(found_in_nb_obj)
+                else:
                     netbox.post_ip(net)
+            else:
+                logger.info("skipping due to network/broadcast ip")
         print("checking ip alocations")
         for line in ip_by_allocation:
             net = {}
+            found_matching_prefix = False
+            smallest_prefix = 0
+            found_prefix = None
             object_id, allocationip_raw = line
             ip = self.convert_ip(allocationip_raw)
             if not ip in adrese:
-                if not f"{ip}/32" in nb_ips:
-                    net.update({"address": ip})
-                    msg = "IP Address: %s" % ip
+                # this is disgusting...
+                for prefix in nb_all_prefixes.keys():
+                    if ip in ipcalc.Network(prefix):
+                        print(f"ip: {ip} in prefix: {prefix}")
+                        subnet_size = prefix.split("/")[1]
+                        if int(subnet_size) > smallest_prefix:
+                            smallest_prefix = int(subnet_size)
+                            found_prefix = prefix
+                print(f"prefix to be used: {found_prefix}")
+                if smallest_prefix > 0:
+                    net['address'] = f"{ip}/{smallest_prefix}"
+                    net['display'] = net['address']
+                found_in_nb = False
+                found_in_nb_obj = None
+                for nb_ip in nb_ips.keys():
+                    if f"{ip}/" in nb_ip:
+                        found_in_nb = True
+                        found_in_nb_obj = nb_ips[nb_ip]
+                        print(f"found in nb!: {nb_ip}")
+                if found_in_nb:
+                    print("i should update the nb ip here")
+                    print(net)
+                    print(found_in_nb_obj.update(net))
+                else:
                     logger.info(msg)
                     netbox.post_ip(net)
 
@@ -1423,37 +1486,86 @@ class DB(object):
             cur2.close()
             self.con = None
         if not netbox.all_ips:
-            netbox.all_ips = {str(item): dict(item) for item in netbox.py_netbox.ipam.ip_addresses.all()}
+            netbox.all_ips = {str(item): item for item in netbox.py_netbox.ipam.ip_addresses.all()}
         nb_ips = netbox.all_ips
-
+        if not netbox.all_prefixes:
+            print("getting all prefixes(s) currently in netbox")
+            netbox.all_prefixes = {str(item): dict(item) for item in netbox.py_netbox.ipam.prefixes.all()}
+        nb_all_prefixes = netbox.all_prefixes
         for line in ips:
             net = {}
+            found_matching_prefix = False
+            smallest_prefix = 0
+            found_prefix = None
             ip_raw, name, comment, reserved = line
             ip = self.convert_ip_v6(ip_raw)
-            if not f"{ip}/128" in nb_ips:
-                adrese.append(ip)
+            adrese.append(ip)
 
-                net.update({"address": ip})
-                msg = "IP Address: %s" % ip
-                logger.info(msg)
+            net.update({"address": ip})
+            msg = "IP Address: %s" % ip
+            logger.info(msg)
 
-                desc = " ".join([name, comment]).strip()
-                net.update({"description": desc})
-                msg = "Label: %s" % desc
-                logger.info(msg)
-
-                netbox.post_ip(net)
+            desc = " ".join([name, comment]).strip()
+            net.update({"description": desc})
+            msg = "Label: %s" % desc
+            logger.info(msg)
+            if not desc in ["network", "broadcast"]:
+                # this is disgusting...
+                for prefix in nb_all_prefixes.keys():
+                    if ip in ipcalc.Network(prefix):
+                        print(f"ip: {ip} in prefix: {prefix}")
+                        subnet_size = prefix.split("/")[1]
+                        if int(subnet_size) > smallest_prefix:
+                            smallest_prefix = int(subnet_size)
+                            found_prefix = prefix
+                print(f"prefix to be used: {found_prefix}")
+                if smallest_prefix > 0:
+                    net['address'] = f"{ip}/{smallest_prefix}"
+                    net['display'] = net['address']
+                found_in_nb = False
+                found_in_nb_obj = None
+                for nb_ip in nb_ips.keys():
+                    if f"{ip}/" in nb_ip:
+                        found_in_nb = True
+                        found_in_nb_obj = nb_ips[nb_ip]
+                        print(f"found in nb!: {nb_ip}")
+                if found_in_nb:
+                    print("i should update the nb ip here")
+                    print(net)
+                    print(found_in_nb_obj.update(net))
+                else:
+                    netbox.post_ip(net)
 
         for line in ip_by_allocation:
             net = {}
             object_id, allocationip_raw = line
             ip = self.convert_ip_v6(allocationip_raw)
-            if not f"{ip}/128" in nb_ips:
-                if not ip in adrese:
-                    net.update({"address": ip})
-                    msg = "IP Address: %s" % ip
+            if not ip in adrese:
+                # this is disgusting...
+                for prefix in nb_all_prefixes.keys():
+                    if ip in ipcalc.Network(prefix):
+                        print(f"ip: {ip} in prefix: {prefix}")
+                        subnet_size = prefix.split("/")[1]
+                        if int(subnet_size) > smallest_prefix:
+                            smallest_prefix = int(subnet_size)
+                            found_prefix = prefix
+                print(f"prefix to be used: {found_prefix}")
+                if smallest_prefix > 0:
+                    net['address'] = f"{ip}/{smallest_prefix}"
+                    net['display'] = net['address']
+                found_in_nb = False
+                found_in_nb_obj = None
+                for nb_ip in nb_ips.keys():
+                    if f"{ip}/" in nb_ip:
+                        found_in_nb = True
+                        found_in_nb_obj = nb_ips[nb_ip]
+                        print(f"found in nb!: {nb_ip}")
+                if found_in_nb:
+                    print("i should update the nb ip here")
+                    print(net)
+                    print(found_in_nb_obj.update(net))
+                else:
                     logger.info(msg)
-
                     netbox.post_ip(net)
 
     def create_tag_map(self):
