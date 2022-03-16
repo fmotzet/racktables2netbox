@@ -1434,7 +1434,7 @@ class DB(object):
                     if nb_ip.startswith(f"{ip}/"):
                         if found_in_nb:
                             # duplicate cound as its already found. nuke
-                            nb_ips[nb_ip].delete
+                            nb_ips[nb_ip].delete()
                             logger.info("duplicate found. removing")
                             continue
                         found_in_nb = True
@@ -1477,7 +1477,7 @@ class DB(object):
                     if nb_ip.startswith(f"{ip}/"):
                         if found_in_nb:
                             # duplicate cound as its already found. nuke
-                            nb_ips[nb_ip].delete
+                            nb_ips[nb_ip].delete()
                             logger.info("duplicate found. removing")
                             continue
                         found_in_nb = True
@@ -1560,7 +1560,7 @@ class DB(object):
                     if nb_ip.startswith(f"{ip}/"):
                         if found_in_nb:
                             # duplicate cound as its already found. nuke
-                            nb_ips[nb_ip].delete
+                            nb_ips[nb_ip].delete()
                             logger.info("duplicate found. removing")
                             continue
                         found_in_nb = True
@@ -1595,7 +1595,7 @@ class DB(object):
                     if nb_ip.startswith(f"{ip}/"):
                         if found_in_nb:
                             # duplicate cound as its already found. nuke
-                            nb_ips[nb_ip].delete
+                            nb_ips[nb_ip].delete()
                             logger.info("duplicate found. removing")
                             continue
                         found_in_nb = True
