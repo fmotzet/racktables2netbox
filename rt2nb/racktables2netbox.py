@@ -1265,7 +1265,29 @@ class NETBOX(object):
 
         except:
             logger.info("failed to find / remove device from netbox")
-
+    
+    def get_ip_prefix_size(self, ip):
+        nb = self.py_netbox
+        if not netbox.all_prefixes:
+            print("getting all prefixes(s) currently in netbox")
+            netbox.all_prefixes = {str(item): dict(item) for item in netbox.py_netbox.ipam.prefixes.all()}
+            # print(json.dumps(netbox.all_prefixes))
+            # exit()
+        nb_all_prefixes = netbox.all_prefixes
+        smallest_prefix = 0
+        found_prefix = None
+        for prefix in nb_all_prefixes.keys():
+            if ip in ipcalc.Network(prefix):
+                found_prefix = True
+                print(f"ip: {ip} in prefix: {prefix}")
+                subnet_size = prefix.split("/")[1]
+                if int(subnet_size) > smallest_prefix:
+                    smallest_prefix = int(subnet_size)
+                    found_prefix = prefix
+        if found_prefix:
+            return smallest_prefix
+        else:
+            return None
 
 class DB(object):
     """
@@ -1409,7 +1431,12 @@ class DB(object):
                 found_in_nb = False
                 found_in_nb_obj = None
                 for nb_ip in nb_ips.keys():
-                    if f"{ip}/" in nb_ip:
+                    if nb_ip.startswith(f"{ip}/"):
+                        if found_in_nb:
+                            # duplicate cound as its already found. nuke
+                            nb_ips[nb_ip].delete
+                            logger.info("duplicate found. removing")
+                            continue
                         found_in_nb = True
                         found_in_nb_obj = nb_ips[nb_ip]
                         print(f"found in nb!: {nb_ip}")
@@ -1447,7 +1474,12 @@ class DB(object):
                 found_in_nb = False
                 found_in_nb_obj = None
                 for nb_ip in nb_ips.keys():
-                    if f"{ip}/" in nb_ip:
+                    if nb_ip.startswith(f"{ip}/"):
+                        if found_in_nb:
+                            # duplicate cound as its already found. nuke
+                            nb_ips[nb_ip].delete
+                            logger.info("duplicate found. removing")
+                            continue
                         found_in_nb = True
                         found_in_nb_obj = nb_ips[nb_ip]
                         print(f"found in nb!: {nb_ip}")
@@ -1510,7 +1542,7 @@ class DB(object):
             msg = "Label: %s" % desc
             logger.info(msg)
             if not desc in ["network", "broadcast"]:
-                # this is disgusting...
+                # dry this out with get_ip_prefix_size
                 for prefix in nb_all_prefixes.keys():
                     if ip in ipcalc.Network(prefix):
                         print(f"ip: {ip} in prefix: {prefix}")
@@ -1525,14 +1557,18 @@ class DB(object):
                 found_in_nb = False
                 found_in_nb_obj = None
                 for nb_ip in nb_ips.keys():
-                    if f"{ip}/" in nb_ip:
+                    if nb_ip.startswith(f"{ip}/"):
+                        if found_in_nb:
+                            # duplicate cound as its already found. nuke
+                            nb_ips[nb_ip].delete
+                            logger.info("duplicate found. removing")
+                            continue
                         found_in_nb = True
                         found_in_nb_obj = nb_ips[nb_ip]
                         print(f"found in nb!: {nb_ip}")
                 if found_in_nb:
                     print("i should update the nb ip here")
                     print(net)
-                    print(found_in_nb_obj.update(net))
                 else:
                     netbox.post_ip(net)
 
@@ -1541,7 +1577,7 @@ class DB(object):
             object_id, allocationip_raw = line
             ip = self.convert_ip_v6(allocationip_raw)
             if not ip in adrese:
-                # this is disgusting...
+                # dry this out with get_ip_prefix_size
                 for prefix in nb_all_prefixes.keys():
                     if ip in ipcalc.Network(prefix):
                         print(f"ip: {ip} in prefix: {prefix}")
@@ -1556,7 +1592,12 @@ class DB(object):
                 found_in_nb = False
                 found_in_nb_obj = None
                 for nb_ip in nb_ips.keys():
-                    if f"{ip}/" in nb_ip:
+                    if nb_ip.startswith(f"{ip}/"):
+                        if found_in_nb:
+                            # duplicate cound as its already found. nuke
+                            nb_ips[nb_ip].delete
+                            logger.info("duplicate found. removing")
+                            continue
                         found_in_nb = True
                         found_in_nb_obj = nb_ips[nb_ip]
                         print(f"found in nb!: {nb_ip}")
@@ -2896,7 +2937,7 @@ class DB(object):
 
             if not nic_name in interfaces.keys():
                 interfaces[nic_name] = []
-            interfaces[nic_name].append(ip + "/32")
+            interfaces[nic_name].append(f"{ip}/{netbox.get_ip_prefix_size(ip)}")
         return interfaces
 
     def get_device_ipv6_ints(self, dev_id):
@@ -2924,7 +2965,7 @@ class DB(object):
             ip = self.convert_ip_v6(rawip)
             if not nic_name in interfaces.keys():
                 interfaces[nic_name] = []
-            interfaces[nic_name].append(ip + "/128")
+            interfaces[nic_name].append(f"{ip}/{netbox.get_ip_prefix_size(ip)}")
         return interfaces
 
     def get_device_to_ip(self):
