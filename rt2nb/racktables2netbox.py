@@ -1393,7 +1393,7 @@ class DB(object):
 
         if not netbox.all_ips:
             print("getting all ip(s) currently in netbox")
-            netbox.all_ips = {str(item): item for item in netbox.py_netbox.ipam.ip_addresses.all()}
+            netbox.all_ips = {str(f"{item}_{item.id}"): item for item in netbox.py_netbox.ipam.ip_addresses.all()}
         nb_ips = netbox.all_ips
 
         print("checking ips")
@@ -1441,8 +1441,8 @@ class DB(object):
                                 logger.error("failed to delete. might already be gone")
                         else:
                             found_in_nb = True
-                            found_in_nb_obj = nb_ips[nb_ip]
-                            print(f"found in nb!: {nb_ip}")
+                            found_in_nb_obj = nb_ip_obj
+                            print(f"found in nb!: {nb_ip_obj.address}")
                 if found_in_nb:
                     print("i should update the nb ip here")
                     print(net)
@@ -1487,8 +1487,8 @@ class DB(object):
                                 logger.error("failed to delete. might already be gone")
                         else:
                             found_in_nb = True
-                            found_in_nb_obj = nb_ips[nb_ip]
-                            print(f"found in nb!: {nb_ip}")
+                            found_in_nb_obj = nb_ip_obj
+                            print(f"found in nb!: {nb_ip_obj.address}")
                 if found_in_nb:
                     print("i should update the nb ip here")
                     print(net)
@@ -1524,7 +1524,7 @@ class DB(object):
             cur2.close()
             self.con = None
         if not netbox.all_ips:
-            netbox.all_ips = {str(item): item for item in netbox.py_netbox.ipam.ip_addresses.all()}
+            netbox.all_ips = {str(f"{item}_{item.id}"): item for item in netbox.py_netbox.ipam.ip_addresses.all()}
         nb_ips = netbox.all_ips
         if not netbox.all_prefixes:
             print("getting all prefixes(s) currently in netbox")
@@ -1573,8 +1573,8 @@ class DB(object):
                                 logger.error("failed to delete. might already be gone")
                         else:
                             found_in_nb = True
-                            found_in_nb_obj = nb_ips[nb_ip]
-                            print(f"found in nb!: {nb_ip}")
+                            found_in_nb_obj = nb_ip_obj
+                            print(f"found in nb!: {nb_ip_obj.address}")
                 if found_in_nb:
                     print("i should update the nb ip here")
                     print(net)
@@ -1611,8 +1611,8 @@ class DB(object):
                                 logger.error("failed to delete. might already be gone")
                         else:
                             found_in_nb = True
-                            found_in_nb_obj = nb_ips[nb_ip]
-                            print(f"found in nb!: {nb_ip}")
+                            found_in_nb_obj = nb_ip_obj
+                            print(f"found in nb!: {nb_ip_obj.address}")
                 if found_in_nb:
                     print("i should update the nb ip here")
                     print(net)
