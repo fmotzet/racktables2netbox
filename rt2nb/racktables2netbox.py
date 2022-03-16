@@ -1583,6 +1583,8 @@ class DB(object):
 
         for line in ip_by_allocation:
             net = {}
+            smallest_prefix = 0
+            found_prefix = None
             object_id, allocationip_raw = line
             ip = self.convert_ip_v6(allocationip_raw)
             if not ip in adrese:
