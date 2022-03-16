@@ -1439,10 +1439,10 @@ class DB(object):
                                 nb_ip_obj.delete()
                             except:
                                 logger.error("failed to delete. might already be gone")
-                            continue
-                        found_in_nb = True
-                        found_in_nb_obj = nb_ips[nb_ip]
-                        print(f"found in nb!: {nb_ip}")
+                        else:
+                            found_in_nb = True
+                            found_in_nb_obj = nb_ips[nb_ip]
+                            print(f"found in nb!: {nb_ip}")
                 if found_in_nb:
                     print("i should update the nb ip here")
                     print(net)
@@ -1485,10 +1485,10 @@ class DB(object):
                                 nb_ip_obj.delete()
                             except:
                                 logger.error("failed to delete. might already be gone")
-                            continue
-                        found_in_nb = True
-                        found_in_nb_obj = nb_ips[nb_ip]
-                        print(f"found in nb!: {nb_ip}")
+                        else:
+                            found_in_nb = True
+                            found_in_nb_obj = nb_ips[nb_ip]
+                            print(f"found in nb!: {nb_ip}")
                 if found_in_nb:
                     print("i should update the nb ip here")
                     print(net)
@@ -1571,10 +1571,10 @@ class DB(object):
                                 nb_ip_obj.delete()
                             except:
                                 logger.error("failed to delete. might already be gone")
-                            continue
-                        found_in_nb = True
-                        found_in_nb_obj = nb_ips[nb_ip]
-                        print(f"found in nb!: {nb_ip}")
+                        else:
+                            found_in_nb = True
+                            found_in_nb_obj = nb_ips[nb_ip]
+                            print(f"found in nb!: {nb_ip}")
                 if found_in_nb:
                     print("i should update the nb ip here")
                     print(net)
@@ -1601,7 +1601,6 @@ class DB(object):
                 found_in_nb = False
                 found_in_nb_obj = None
                 for nb_ip, nb_ip_obj in nb_ips.items():
-                    if nb_ip.startswith(f"{ip}/"):
                         if found_in_nb:
                             # duplicate cound as its already found. nuke
                             logger.info("duplicate found. removing")
@@ -1609,10 +1608,10 @@ class DB(object):
                                 nb_ip_obj.delete()
                             except:
                                 logger.error("failed to delete. might already be gone")
-                            continue
-                        found_in_nb = True
-                        found_in_nb_obj = nb_ips[nb_ip]
-                        print(f"found in nb!: {nb_ip}")
+                        else:
+                            found_in_nb = True
+                            found_in_nb_obj = nb_ips[nb_ip]
+                            print(f"found in nb!: {nb_ip}")
                 if found_in_nb:
                     print("i should update the nb ip here")
                     print(net)
