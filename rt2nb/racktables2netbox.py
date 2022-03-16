@@ -1430,13 +1430,13 @@ class DB(object):
                     net['display'] = net['address']
                 found_in_nb = False
                 found_in_nb_obj = None
-                for nb_ip in nb_ips.keys():
+                for nb_ip, nb_ip_obj in nb_ips.items():
                     if nb_ip.startswith(f"{ip}/"):
                         if found_in_nb:
                             # duplicate cound as its already found. nuke
                             logger.info("duplicate found. removing")
                             try:
-                                nb_ips[nb_ip].delete()
+                                nb_ip_obj.delete()
                             except:
                                 logger.error("failed to delete. might already be gone")
                             continue
@@ -1476,13 +1476,13 @@ class DB(object):
                     net['display'] = net['address']
                 found_in_nb = False
                 found_in_nb_obj = None
-                for nb_ip in nb_ips.keys():
+                for nb_ip, nb_ip_obj in nb_ips.items():
                     if nb_ip.startswith(f"{ip}/"):
                         if found_in_nb:
                             # duplicate cound as its already found. nuke
                             logger.info("duplicate found. removing")
                             try:
-                                nb_ips[nb_ip].delete()
+                                nb_ip_obj.delete()
                             except:
                                 logger.error("failed to delete. might already be gone")
                             continue
@@ -1562,13 +1562,13 @@ class DB(object):
                     net['display'] = net['address']
                 found_in_nb = False
                 found_in_nb_obj = None
-                for nb_ip in nb_ips.keys():
+                for nb_ip, nb_ip_obj in nb_ips.items():
                     if nb_ip.startswith(f"{ip}/"):
                         if found_in_nb:
                             # duplicate cound as its already found. nuke
                             logger.info("duplicate found. removing")
                             try:
-                                nb_ips[nb_ip].delete()
+                                nb_ip_obj.delete()
                             except:
                                 logger.error("failed to delete. might already be gone")
                             continue
@@ -1600,13 +1600,13 @@ class DB(object):
                     net['display'] = net['address']
                 found_in_nb = False
                 found_in_nb_obj = None
-                for nb_ip in nb_ips.keys():
+                for nb_ip, nb_ip_obj in nb_ips.items():
                     if nb_ip.startswith(f"{ip}/"):
                         if found_in_nb:
                             # duplicate cound as its already found. nuke
                             logger.info("duplicate found. removing")
                             try:
-                                nb_ips[nb_ip].delete()
+                                nb_ip_obj.delete()
                             except:
                                 logger.error("failed to delete. might already be gone")
                             continue
