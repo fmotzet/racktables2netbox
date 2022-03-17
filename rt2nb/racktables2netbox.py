@@ -543,9 +543,18 @@ class NETBOX(object):
                     logger.debug("attempting to assign ip")
                     print(nb_ip.update(ip_update))
                 else:
-                    ip_update["address"] = ip
-                    logger.debug(f"ip {ip} does not yet exist in nb. attempting create and assignment")
-                    print(self.py_netbox.ipam.ip_addresses.create(ip_update))
+                    split_ip = ip.split('/')[0]
+                    nb_ip2 = self.py_netbox.ipam.ip_addresses.get(address=split_ip)
+                    if nb_ip2:
+                        logger.debug("attempting to assign ip. found by removing /")
+                        print(nb_ip2.update(ip_update))
+                    else:
+                        ip_update["address"] = ip
+                        logger.debug(f"ip {ip} does not yet exist in nb. attempting create and assignment")
+                        try:
+                            print(self.py_netbox.ipam.ip_addresses.create(ip_update))
+                        except:
+                            print("failed to create ip. probably a duplicate")
 
         for dev_int in dev_ints:
 
