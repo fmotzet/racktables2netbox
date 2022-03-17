@@ -554,7 +554,7 @@ class NETBOX(object):
                         try:
                             print(self.py_netbox.ipam.ip_addresses.create(ip_update))
                         except:
-                            print("failed to create ip. probably a duplicate")
+                            logger.error("failed to create ip. probably a duplicate")
 
         for dev_int in dev_ints:
 
