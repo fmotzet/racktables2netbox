@@ -28,8 +28,10 @@ Migrate:
   PATCHPANELS: True
   PDUS: True
   VMS: True
+  FILES: False
 #:===== Other settings:======== #
 Misc:
+  FILE_SEARCH_URI: https://company_name.sharepoint.com/sites/company_name/Shared%20Documents/Shared/folder-name/rt_export/
   DEFAULT_DEVICE_ROLE_ID: 1 # Numeral or False
   DEFAULT_VM_CLUSTER_ID: 1
   SITE_NAME_CLEANUP: True
