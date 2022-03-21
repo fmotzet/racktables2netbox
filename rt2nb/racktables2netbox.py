@@ -3074,6 +3074,7 @@ class DB(object):
             line = ["" if x is None else x for x in line]
             # print(line)
             pdu_id, name, label, asset_num, comment, unit_no, position, rack_id, has_problems = line
+            print(pdu_id)
             if has_problems == "yes":
                 has_problems = True
             else:
@@ -3210,14 +3211,17 @@ class DB(object):
                     print("0u pdu")
 
                     rt_rack_id = self.get_rack_id_for_zero_us(pdu_id)
-                    rack_data = netbox.get_rack_by_rt_id(rt_rack_id)
-                    site_id = rack_data["site"]["id"]
-                    rack_id = rack_data["id"]
-                    # pp.pprint(dict(rack_data))
-                    pdudata["rack"] = rack_id
-                    if rack_data["location"]["id"]:
-                        rack_location = rack_data["location"]["id"]
+                    if rt_rack_id:
+                        rack_data = netbox.get_rack_by_rt_id(rt_rack_id)
+                        site_id = rack_data["site"]["id"]
+                        rack_id = rack_data["id"]
+                        # pp.pprint(dict(rack_data))
+                        pdudata["rack"] = rack_id
+                    
+                        if rack_data["location"]["id"]:
+                            rack_location = rack_data["location"]["id"]
                     else:
+                        rack_id = None
                         rack_location = None
 
                     # exit(22)
