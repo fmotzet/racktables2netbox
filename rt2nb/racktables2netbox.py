@@ -3628,6 +3628,26 @@ class DB(object):
             logger.debug(f"end of vm: {id} {name}")
 
 
+    def get_files(self):
+        if not self.all_ports:
+            self.get_ports()
+        if not bool(self.container_map):
+            self.get_container_map()
+        if not self.con:
+            self.connect()
+        with self.con:
+            cur = self.con.cursor()
+            q = f"SELECT * FROM FileLink left join File on File.id = FileLink.file_id;"
+            cur.execute(q)
+            data = cur.fetchall()
+            cur.close()
+        self.con = None
+
+        # for vm_data_tupple in data:
+        #     vm_data = {}
+        #     id, name, label, objtypeid, asset_no, has_problems, comment = vm_data_tupple
+        #     logger.debug(f"start of vm: {id} {name}")
+
 if __name__ == "__main__":
     # Import config
     # configfile = "conf"
