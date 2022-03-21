@@ -1297,6 +1297,38 @@ class NETBOX(object):
             return smallest_prefix
         else:
             return None
+    
+    def update_object_file_links(self, object_type, object_id, file_links):
+        nb = self.py_netbox
+        update_data = {"custom_fields":{"external_urls": file_links}}
+        if object_type == "object":
+            # might be device or vm
+            print(f"checking for device via rt_dev_id:{object_id}")
+            nb_device = py_netbox.dcim.devices.get(cf_rt_id=str(object_id))
+            # print(dict(nb_device))
+            dev_type = "device"
+
+            if isinstance(nb_device, type(None)):
+                logger.debug("did not find a device with that rt_id, will check for a vm now")
+                nb_device = py_netbox.virtualization.virtual_machines.get(cf_rt_id=str(object_id))
+                dev_type = "vm"
+                if not isinstance(nb_device, type(None)):
+                    logger.debug("found vm")
+                else:
+                    logger.error("did not find device or vm with that ID")
+                    dev_type = None
+            if dev_type:
+                nb_device.update(update_data)
+        elif object_type == "rack":
+            dev_type = "rack"
+            nb_rack = py_netbox.dcim.racks.get(cf_rt_id=str(object_id))
+            if nb_rack:
+                nb_rack.update(update_data)
+        else:
+            dev_type = object_type
+        
+        print(dev_type)
+
 
 class DB(object):
     """
@@ -1869,6 +1901,7 @@ class DB(object):
         attributes.append({"name": "Visible label", "type": "text"})
         attributes.append({"name": "SW type", "type": "text"})
         attributes.append({"name": "Operating System", "type": "text"})
+        attributes.append({"name": "External URLs", "type": "longtext"}) 
 
         netbox.createCustomFields(attributes)
 
@@ -3629,24 +3662,74 @@ class DB(object):
 
 
     def get_files(self):
-        if not self.all_ports:
-            self.get_ports()
-        if not bool(self.container_map):
-            self.get_container_map()
         if not self.con:
             self.connect()
         with self.con:
             cur = self.con.cursor()
-            q = f"SELECT * FROM FileLink left join File on File.id = FileLink.file_id;"
+            q = f"""SELECT FileLink.id as link_id,
+                    FileLink.file_id as file_id,
+                    FileLink.entity_type as entity_type,
+                    FileLink.entity_id as entity_id,
+                    File.name as file_name,
+                    File.type as file_type,
+                    File.contents as file_content,
+                    File.comment as file_comment
+                    FROM FileLink left join File on File.id = FileLink.file_id
+                    Order by link_id asc;"""
             cur.execute(q)
             data = cur.fetchall()
             cur.close()
         self.con = None
+        entity_links = {}
+        for file_tupple_data in data:
+            file_link_data = {}
+            link_id, file_id, entity_type, entity_id, file_name, file_type, file_content, file_comment = file_tupple_data
+            file_link_data["link_id"] = link_id
+            file_link_data["file_id"] = file_id
+            file_link_data["entity_type"] = entity_type
+            file_link_data["entity_id"] = entity_id
+            file_link_data["file_name"] = file_name
+            file_link_data["file_type"] = file_type
+            file_link_data["file_content"] = file_content
+            file_link_data["file_comment"] = file_comment
 
-        # for vm_data_tupple in data:
-        #     vm_data = {}
-        #     id, name, label, objtypeid, asset_no, has_problems, comment = vm_data_tupple
-        #     logger.debug(f"start of vm: {id} {name}")
+            export_filename = f"{file_id}_{file_name}"
+            logger.debug(f"start of link_id: {link_id} - {file_name}")
+            current_file = f"./file_exports/{export_filename}"
+            file_link_data["export_file_name"] = current_file
+            if os.path.exists(f"./file_exports/{export_filename}"):
+                print("file already exists")
+            else:
+                print("writing file")
+                f = open(current_file, 'wb')
+                f.write(file_content)
+                f.close()
+            entity = f"{entity_type}_{entity_id}"
+            print(entity)
+            if not entity in entity_links.keys():
+                entity_links[entity] = []
+            entity_links[entity].append(file_link_data)
+        
+        for entity, entity_data in entity_links.items():
+            entity_comment_data = ""
+            if len(entity_data) > 1:
+                # print(entity)
+                print(f"I have more than one file attached: {entity}")
+            else:
+                print("I have only one file attached")
+            for linkdata in entity_data:
+                filename = linkdata['export_file_name'].split("file_exports/")[1]
+                description = f"external_file: {linkdata['file_name']}"
+                if not linkdata['file_comment'] == "":
+                    comment = f"\n\n{linkdata['file_comment']}"
+                else:
+                    comment = ""
+                entity_comment_data = entity_comment_data + f"\n\n[{description}]({config['Misc']['FILE_SEARCH_URI']}{urllib.parse.quote(filename)}){comment}"
+            entity_comment_data = entity_comment_data.strip("\n\n")
+            print(entity_comment_data)
+            update_device = netbox.update_object_file_links(linkdata['entity_type'],linkdata['entity_id'],entity_comment_data  )
+            print("")
+
 
 if __name__ == "__main__":
     # Import config
@@ -3738,6 +3821,8 @@ if __name__ == "__main__":
         racktables.get_patch_panels()
     if config["Migrate"]["VMS"] == True:
         racktables.get_vms()
+    if config["Migrate"]["FILES"] ==  True:
+        racktables.get_files()
 
     migrator = Migrator()
 
