@@ -1773,6 +1773,8 @@ class DB(object):
                     subs.update({"vlan": vlan})
                 except:
                     logger.debug("failed to find vlan for subnet {}".format(subnet))
+            else:
+                subs.update({"vlan": None})
             subs.update({"prefix": "/".join([subnet, str(mask)])})
             ip_calc_net = ipcalc.Network(subs["prefix"])
             ip_calc_net2 = ipcalc.Network(str(ip_calc_net.network()) + "/" + str(ip_calc_net.subnet()))
