@@ -1731,7 +1731,6 @@ class DB(object):
         Fetch subnets from RT and send them to upload function
         :return:
         """
-        subs = {}
         if not self.vlan_group_map:
             self.create_vlan_domains_nb_group_map()
         if not self.vlan_map:
@@ -1750,6 +1749,7 @@ class DB(object):
             self.con = None
 
         for line in subnets:
+            subs = {}
             if not self.tag_map:
                 self.create_tag_map()
             sid, raw_sub, mask, last_ip, name, comment, vlan_domain_id, vlan_id, ipv6net_id = line
