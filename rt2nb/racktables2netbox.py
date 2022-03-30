@@ -1468,7 +1468,7 @@ class DB(object):
                 print(f"prefix to be used: {found_prefix}")
                 if smallest_prefix > 0:
                     net['address'] = f"{ip}/{smallest_prefix}"
-                    net['display'] = net['address']
+                    # net['display'] = net['address']
                 found_in_nb = False
                 found_in_nb_obj = None
                 for nb_ip, nb_ip_obj in nb_ips.items():
@@ -1514,7 +1514,7 @@ class DB(object):
                 print(f"prefix to be used: {found_prefix}")
                 if smallest_prefix > 0:
                     net['address'] = f"{ip}/{smallest_prefix}"
-                    net['display'] = net['address']
+                    # net['display'] = net['address']
                 found_in_nb = False
                 found_in_nb_obj = None
                 for nb_ip, nb_ip_obj in nb_ips.items():
@@ -1600,7 +1600,7 @@ class DB(object):
                 print(f"prefix to be used: {found_prefix}")
                 if smallest_prefix > 0:
                     net['address'] = f"{ip}/{smallest_prefix}"
-                    net['display'] = net['address']
+                    # net['display'] = net['address']
                 found_in_nb = False
                 found_in_nb_obj = None
                 for nb_ip, nb_ip_obj in nb_ips.items():
@@ -1619,6 +1619,7 @@ class DB(object):
                 if found_in_nb:
                     print("i should update the nb ip here")
                     print(net)
+                    print(found_in_nb_obj.update(net))
                 else:
                     netbox.post_ip(net)
 
@@ -1640,7 +1641,7 @@ class DB(object):
                 print(f"prefix to be used: {found_prefix}")
                 if smallest_prefix > 0:
                     net['address'] = f"{ip}/{smallest_prefix}"
-                    net['display'] = net['address']
+                    # net['display'] = net['address']
                 found_in_nb = False
                 found_in_nb_obj = None
                 for nb_ip, nb_ip_obj in nb_ips.items():
