@@ -13,6 +13,7 @@ while nb_not_up:
         response = requests.get(api_url)
         print(f"status_code: {response.status_code}")
         if "circuits" in response.text:
+            print("'circuits' in response. nb is up!")
             nb_not_up = False
             exit(0)
     except:
