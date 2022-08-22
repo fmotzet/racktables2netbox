@@ -1,5 +1,5 @@
 #!/bin/bash
-
+set -x
 pip3 install -r /opt/repo/requirements.txt
 
 cd /opt/repo/
