@@ -7,10 +7,12 @@ jobs:
   ci:
     runs-on: ubuntu-latest
     steps:
-    - uses: docker-practice/actions-setup-docker@master
-    - run: |
-          set -x
+      - uses: actions/checkout@v3
+      - uses: docker-practice/actions-setup-docker@master
+      - run: |
+            set -x
 
-          docker version
+            docker version
 
-          ls -lah
+            ls -lah
+      
