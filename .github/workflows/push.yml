@@ -21,6 +21,7 @@ jobs:
             docker-compose up -d
       - run: |
             set -x
-            cd development; 
+            cd development
+            sleep 60
             docker-compose exec -T rt2nb_runner /opt/repo/development/rt2nb_runner_run_migration.sh
       
