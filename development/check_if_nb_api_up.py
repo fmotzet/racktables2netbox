@@ -4,9 +4,10 @@ from time import sleep
 import requests
 import os
 
-max_timeout = 300
 nb_not_up = True
 api_url = "http://netbox:8000/api"
+max_timeout_attempts = 35
+current_attempts = 0
 while nb_not_up:
     try:
         response = requests.get(api_url)
@@ -14,7 +15,11 @@ while nb_not_up:
             nb_not_up = False
     except:
         print("did not get a repsonse yet")
-    
+    if not current_attempts < max_timeout_attempts:
+        print("max attempts reached. dying")
+        exit(2)
     if nb_not_up:
         print("netbox not yet up. sleeping for 10s and trying again")
+        current_attempts = current_attempts + 1
         sleep(10)
+
