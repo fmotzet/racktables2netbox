@@ -5,12 +5,13 @@ import requests
 import os
 
 nb_not_up = True
-api_url = "http://netbox:8000/api"
+api_url = "http://netbox:8080/api"
 max_timeout_attempts = 20
 current_attempts = 0
 while nb_not_up:
     try:
         response = requests.get(api_url)
+        print(f"status_code: {response.status_code}")
         if "circuits" in response.text:
             nb_not_up = False
             exit(0)
