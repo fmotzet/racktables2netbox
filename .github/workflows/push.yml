@@ -15,4 +15,7 @@ jobs:
             docker version
 
             ls -lah
+            cd development
+            docker-compose up -d
+            
       
