@@ -1,0 +1,11 @@
+---
+manufacturer: Generic
+model: generic_46u_device
+slug: generic_46u_device
+u_height: 46
+is_full_depth: true
+power-ports:
+  - name: Power 1
+    type: iec-60320-c14
+  - name: Power 2
+    type: iec-60320-c14

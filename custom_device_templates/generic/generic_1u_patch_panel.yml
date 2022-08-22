@@ -1,0 +1,12 @@
+---
+manufacturer: Generic
+model: generic_1u_patch_panel
+slug: generic_1u_patch_panel
+u_height: 1
+is_full_depth: false
+subdevice_role: parent
+device-bays:
+  - name: '01'
+  - name: '02'
+  - name: '03'
+  - name: '04'
