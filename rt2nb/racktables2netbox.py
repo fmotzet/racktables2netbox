@@ -543,7 +543,7 @@ class NETBOX(object):
                     logger.debug("attempting to assign ip")
                     print(nb_ip.update(ip_update))
                 else:
-                    split_ip = ip.split('/')[0]
+                    split_ip = ip.split("/")[0]
                     nb_ip2 = self.py_netbox.ipam.ip_addresses.get(address=split_ip)
                     if nb_ip2:
                         logger.debug("attempting to assign ip. found by removing /")
@@ -1274,7 +1274,7 @@ class NETBOX(object):
 
         except:
             logger.info("failed to find / remove device from netbox")
-    
+
     def get_ip_prefix_size(self, ip):
         nb = self.py_netbox
         if not netbox.all_prefixes:
@@ -1297,10 +1297,10 @@ class NETBOX(object):
             return smallest_prefix
         else:
             return None
-    
+
     def update_object_file_links(self, object_type, object_id, file_links):
         nb = self.py_netbox
-        update_data = {"custom_fields":{"external_urls": file_links}}
+        update_data = {"custom_fields": {"external_urls": file_links}}
         if object_type == "object":
             # might be device or vm
             print(f"checking for device via rt_dev_id:{object_id}")
@@ -1326,7 +1326,7 @@ class NETBOX(object):
                 nb_rack.update(update_data)
         else:
             dev_type = object_type
-        
+
         print(dev_type)
 
 
@@ -1467,7 +1467,7 @@ class DB(object):
                             found_prefix = prefix
                 print(f"prefix to be used: {found_prefix}")
                 if smallest_prefix > 0:
-                    net['address'] = f"{ip}/{smallest_prefix}"
+                    net["address"] = f"{ip}/{smallest_prefix}"
                     # net['display'] = net['address']
                 found_in_nb = False
                 found_in_nb_obj = None
@@ -1513,7 +1513,7 @@ class DB(object):
                             found_prefix = prefix
                 print(f"prefix to be used: {found_prefix}")
                 if smallest_prefix > 0:
-                    net['address'] = f"{ip}/{smallest_prefix}"
+                    net["address"] = f"{ip}/{smallest_prefix}"
                     # net['display'] = net['address']
                 found_in_nb = False
                 found_in_nb_obj = None
@@ -1599,7 +1599,7 @@ class DB(object):
                             found_prefix = prefix
                 print(f"prefix to be used: {found_prefix}")
                 if smallest_prefix > 0:
-                    net['address'] = f"{ip}/{smallest_prefix}"
+                    net["address"] = f"{ip}/{smallest_prefix}"
                     # net['display'] = net['address']
                 found_in_nb = False
                 found_in_nb_obj = None
@@ -1640,7 +1640,7 @@ class DB(object):
                             found_prefix = prefix
                 print(f"prefix to be used: {found_prefix}")
                 if smallest_prefix > 0:
-                    net['address'] = f"{ip}/{smallest_prefix}"
+                    net["address"] = f"{ip}/{smallest_prefix}"
                     # net['display'] = net['address']
                 found_in_nb = False
                 found_in_nb_obj = None
@@ -1904,7 +1904,7 @@ class DB(object):
         attributes.append({"name": "Visible label", "type": "text"})
         attributes.append({"name": "SW type", "type": "text"})
         attributes.append({"name": "Operating System", "type": "text"})
-        attributes.append({"name": "External URLs", "type": "longtext"}) 
+        attributes.append({"name": "External URLs", "type": "longtext"})
 
         netbox.createCustomFields(attributes)
 
@@ -2684,7 +2684,7 @@ class DB(object):
                     attrib_value,
                     attrib_type,
                     has_problems,
-                    object_class_type
+                    object_class_type,
                 ) = x
                 logger.debug(x)
                 if rdesc is None:
@@ -2872,7 +2872,7 @@ class DB(object):
                 if not "site" in devicedata.keys():
                     netbox_sites_by_comment = netbox.get_sites_keyd_by_description()
                     devicedata["site"] = netbox_sites_by_comment[rlocation_name]["id"]
-                
+
                 devicedata["device_role"] = self.nb_role_id(object_class_type)
 
                 if not "hardware" in devicedata.keys():
@@ -3253,7 +3253,7 @@ class DB(object):
                         rack_id = rack_data["id"]
                         # pp.pprint(dict(rack_data))
                         pdudata["rack"] = rack_id
-                    
+
                         if rack_data["location"]["id"]:
                             rack_location = rack_data["location"]["id"]
                     else:
@@ -3667,7 +3667,6 @@ class DB(object):
             netbox.create_device_interfaces(id, ports, ip_ints, True, "virtual")
             logger.debug(f"end of vm: {id} {name}")
 
-
     def get_files(self):
         if not self.con:
             self.connect()
@@ -3708,7 +3707,7 @@ class DB(object):
                 print("file already exists")
             else:
                 print("writing file")
-                f = open(current_file, 'wb')
+                f = open(current_file, "wb")
                 f.write(file_content)
                 f.close()
             entity = f"{entity_type}_{entity_id}"
@@ -3716,7 +3715,7 @@ class DB(object):
             if not entity in entity_links.keys():
                 entity_links[entity] = []
             entity_links[entity].append(file_link_data)
-        
+
         for entity, entity_data in entity_links.items():
             entity_comment_data = ""
             if len(entity_data) > 1:
@@ -3725,16 +3724,16 @@ class DB(object):
             else:
                 print("I have only one file attached")
             for linkdata in entity_data:
-                filename = linkdata['export_file_name'].split("file_exports/")[1]
+                filename = linkdata["export_file_name"].split("file_exports/")[1]
                 description = f"external_file: {linkdata['file_name']}"
-                if not linkdata['file_comment'] == "":
+                if not linkdata["file_comment"] == "":
                     comment = f"\n\n{linkdata['file_comment']}"
                 else:
                     comment = ""
                 entity_comment_data = entity_comment_data + f"\n\n[{description}]({config['Misc']['FILE_SEARCH_URI']}{urllib.parse.quote(filename)}){comment}"
             entity_comment_data = entity_comment_data.strip("\n\n")
             print(entity_comment_data)
-            update_device = netbox.update_object_file_links(linkdata['entity_type'],linkdata['entity_id'],entity_comment_data  )
+            update_device = netbox.update_object_file_links(linkdata["entity_type"], linkdata["entity_id"], entity_comment_data)
             print("")
 
 
@@ -3828,7 +3827,7 @@ if __name__ == "__main__":
         racktables.get_patch_panels()
     if config["Migrate"]["VMS"] == True:
         racktables.get_vms()
-    if config["Migrate"]["FILES"] ==  True:
+    if config["Migrate"]["FILES"] == True:
         racktables.get_files()
 
     migrator = Migrator()

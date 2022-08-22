@@ -25,4 +25,3 @@ while nb_not_up:
         print("netbox not yet up. sleeping for 10s and trying again")
         current_attempts = current_attempts + 1
         sleep(10)
-
