@@ -7,8 +7,8 @@ jobs:
   ci:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
       - uses: docker-practice/actions-setup-docker@master
+      - uses: actions/checkout@v3
       - run: |
             set -x
 
@@ -22,5 +22,5 @@ jobs:
       - run: |
             set -x
             cd development; 
-            docker-compose exec rt2nb_runner /opt/repo/development/rt2nb_runner_run_migration.sh
+            docker-compose exec -T rt2nb_runner /opt/repo/development/rt2nb_runner_run_migration.sh
       
