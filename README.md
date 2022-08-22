@@ -1,6 +1,8 @@
 # racktables2netbox
 A [RackTables](https://github.com/racktables/racktables) to [NetBox](https://github.com/digitalocean/netbox) migration utility. This tiny tool should be used to migrate your existing RackTables installations towards NetBox.
 
+Reccomended racktables source version 0.21.X
+
 ## Known Issues
 1. Racktables allows an object to be "split" across U's, netbox does not. split these up in racktables pre-migration. (eg, a device in U1 and U3, but not in U2)
 2. Netbox needs device templates, you will need to populate hardware_map.yaml with mappings between racktables device types to nb device types
