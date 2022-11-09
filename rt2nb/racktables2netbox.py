@@ -25,7 +25,7 @@ import re
 import ipcalc
 
 
-class Migrator:  
+class Migrator:
     def slugify(self, text):
         return slugify.slugify(text, max_length=50)
 
@@ -160,7 +160,8 @@ class NETBOX(object):
         url = self.base_url + "/ipam/prefixes/"
         exists = self.check_for_subnet(data)
         if exists[0]:
-            logger.info("prefix/subnet: {} already exists, updating with Put".format(data["prefix"]))
+            logger.info(
+                "prefix/subnet: {} already exists, updating with Put".format(data["prefix"]))
             method = "PUT"
             url = "{}{}/".format(url, exists[1]["id"])
             self.uploader(data, url, method)
@@ -185,7 +186,8 @@ class NETBOX(object):
 
     def check_for_ip(self, data):
         url_safe_ip = urllib.parse.quote_plus(data["address"])
-        url = self.base_url + "/ipam/ip-addresses/?address={}".format(url_safe_ip)
+        url = self.base_url + \
+            "/ipam/ip-addresses/?address={}".format(url_safe_ip)
         logger.info("checking for existing ip in netbox: {}".format(url))
         check = self.fetcher(url)
         json_obj = json.loads(check)
@@ -200,26 +202,32 @@ class NETBOX(object):
 
     def device_type_checker(self, device_model_name, attempt_import=True):
         if not self.device_types:
-            self.device_types = {str(item.slug): dict(item) for item in self.py_netbox.dcim.device_types.all()}
+            self.device_types = {str(item.slug): dict(item)
+                                 for item in self.py_netbox.dcim.device_types.all()}
         if not attempt_import:
-            self.device_types = {str(item.slug): dict(item) for item in self.py_netbox.dcim.device_types.all()}
+            self.device_types = {str(item.slug): dict(item)
+                                 for item in self.py_netbox.dcim.device_types.all()}
         slug_id = None
         if str(device_model_name) in device_type_map_preseed["by_key_name"].keys():
             logger.debug("hardware match")
             print(device_model_name)
             # print(str(devicedata['hardware']))
-            nb_slug = device_type_map_preseed["by_key_name"][str(device_model_name)]["slug"]
+            nb_slug = device_type_map_preseed["by_key_name"][str(
+                device_model_name)]["slug"]
             if nb_slug in self.device_types:
                 logger.debug("found template in netbox")
                 slug_id = self.device_types[nb_slug]["id"]
             elif attempt_import:
-                logger.debug("did not find matching device template in netbox, attempting import")
-                self.post_device_type(device_model_name, device_type_map_preseed["by_key_name"][str(device_model_name)])
+                logger.debug(
+                    "did not find matching device template in netbox, attempting import")
+                self.post_device_type(
+                    device_model_name, device_type_map_preseed["by_key_name"][str(device_model_name)])
                 return self.device_type_checker(device_model_name, False)
             else:
                 logger.debug("did not find matching device template in netbox")
                 if not config["Misc"]["SKIP_DEVICES_WITHOUT_TEMPLATE"] == True:
-                    logger.debug("device with no matching template by slugname {nb_slug} found")
+                    logger.debug(
+                        "device with no matching template by slugname {nb_slug} found")
                     exit(112)
         else:
             logger.debug("hardware type missing: {}".format(device_model_name))
@@ -229,7 +237,8 @@ class NETBOX(object):
         url = self.base_url + "/ipam/ip-addresses/"
         exists = self.check_for_ip(data)
         if exists:
-            logger.info("ip: {} already exists, skipping".format(data["address"]))
+            logger.info(
+                "ip: {} already exists, skipping".format(data["address"]))
         else:
             logger.info("Posting IP data to {}".format(url))
             self.uploader(data, url)
@@ -244,19 +253,22 @@ class NETBOX(object):
         resp = {}
         for site in sites:
             if site["description"] == "":
-                logger.debug("site: {} {} has no description set, skipping".format(site["display"], site["url"]))
+                logger.debug("site: {} {} has no description set, skipping".format(
+                    site["display"], site["url"]))
             else:
                 if not site["description"] in resp.keys():
                     resp[site["description"]] = site
                 else:
-                    logger.debug("duplicate description detected! {}".format(site["description"]))
+                    logger.debug("duplicate description detected! {}".format(
+                        site["description"]))
         return resp
 
     def post_rack(self, data):
         url = self.base_url + "/dcim/racks/"
         exists = self.check_if_rack_exists(data)
         if exists[0]:
-            logger.info("rack: {} already exists, updating".format(data["name"]))
+            logger.info(
+                "rack: {} already exists, updating".format(data["name"]))
             url = url + "{}/".format(exists[1])
             self.uploader(data, url, "PUT")
         else:
@@ -322,7 +334,8 @@ class NETBOX(object):
         groups = {}
         for group in resp["results"]:
             if group["name"] in groups.keys():
-                logger.debug("duplicate group name exists! fix this. group: {}".format(group["name"]))
+                logger.debug(
+                    "duplicate group name exists! fix this. group: {}".format(group["name"]))
                 exit(1)
             groups[group["name"]] = group
         logger.debug(groups)
@@ -341,7 +354,9 @@ class NETBOX(object):
             self.uploader2(data, url)
 
     def check_for_vlan(self, data):
-        url = self.base_url + "/ipam/vlans/?vid={}&group_id={}".format(data["vid"], data["group"])
+        url = self.base_url + \
+            "/ipam/vlans/?vid={}&group_id={}".format(
+                data["vid"], data["group"])
         logger.info("checking for vlan in netbox: {}".format(url))
         check = self.fetcher(url)
         json_obj = json.loads(check)
@@ -368,7 +383,8 @@ class NETBOX(object):
         url = self.base_url + "/ipam/vlans/"
         exists = self.check_for_vlan(data)
         if exists[0]:
-            logger.info("vlan: {} already exists, updating".format(data["name"]))
+            logger.info(
+                "vlan: {} already exists, updating".format(data["name"]))
             url = url + "{}/".format(exists[1]["id"])
             self.uploader(data, url, "PUT")
         else:
@@ -392,51 +408,62 @@ class NETBOX(object):
                 try:
                     data = yaml.safe_load(stream)
                 except yaml.YAMLError as exc:
-                    logger.debug(f"failed to load {import_source['yaml_file']} for {device_type_key} template")
+                    logger.debug(
+                        f"failed to load {import_source['yaml_file']} for {device_type_key} template")
                     logger.debug(exc)
         if "yaml_url" in import_source.keys():
             try:
                 resp = requests.get(import_source["yaml_url"])
                 data = yaml.safe_load(resp.text)
             except:
-                logger.debug(f"failed to load {import_source['yaml_url']} for {device_type_key} template")
+                logger.debug(
+                    f"failed to load {import_source['yaml_url']} for {device_type_key} template")
 
         pp.pprint(data)
-        man_data = {"name": data["manufacturer"], "slug": self.slugFormat(data["manufacturer"])}
+        man_data = {"name": data["manufacturer"],
+                    "slug": self.slugFormat(data["manufacturer"])}
         self.createManufacturers([man_data], py_netbox)
         data["manufacturer"] = man_data
         self.createDeviceTypes([data], py_netbox)
-        self.device_types = {str(item.slug): dict(item) for item in self.py_netbox.dcim.device_types.all()}
+        self.device_types = {str(item.slug): dict(item)
+                             for item in self.py_netbox.dcim.device_types.all()}
 
     def post_device(self, data, py_netbox=None, has_problems=False):
         if not py_netbox:
             py_netbox = self.py_netbox
         needs_updating = False
-        device_check1 = [item for item in py_netbox.dcim.devices.filter(cf_rt_id=data["custom_fields"]["rt_id"])]
+        device_check1 = [item for item in py_netbox.dcim.devices.filter(
+            cf_rt_id=data["custom_fields"]["rt_id"])]
         print(device_check1)
         if len(device_check1) == 1:
-            device_exists = dict(py_netbox.dcim.devices.get(cf_rt_id=data["custom_fields"]["rt_id"]))
+            device_exists = dict(py_netbox.dcim.devices.get(
+                cf_rt_id=data["custom_fields"]["rt_id"]))
             print(device_exists)
             if device_exists["custom_fields"]["rt_id"] == data["custom_fields"]["rt_id"]:
-                logger.debug("device already in netbox (via rt_id). sending to update checker")
+                logger.debug(
+                    "device already in netbox (via rt_id). sending to update checker")
                 needs_updating = True
                 matched_by = "cf_rt_id"
         if not needs_updating:
             if "asset_tag" in data.keys():
-                device_check2 = [str(item) for item in py_netbox.dcim.devices.filter(asset_tag=data["asset_tag"])]
+                device_check2 = [str(item) for item in py_netbox.dcim.devices.filter(
+                    asset_tag=data["asset_tag"])]
                 if len(device_check2) == 1:
-                    logger.debug("device already in netbox (via asset_tag). sending to update checker")
+                    logger.debug(
+                        "device already in netbox (via asset_tag). sending to update checker")
                     needs_updating = True
                     matched_by = "asset_tag"
         if not needs_updating:
-            device_check3 = [str(item) for item in py_netbox.dcim.devices.filter(name=data["name"])]
+            device_check3 = [
+                str(item) for item in py_netbox.dcim.devices.filter(name=data["name"])]
             if len(device_check3) == 1:
-                logger.debug("device already in netbox (via name). sending to update checker")
+                logger.debug(
+                    "device already in netbox (via name). sending to update checker")
                 needs_updating = True
                 matched_by = "name"
         print("test1337")
         print(needs_updating)
-        print (data)
+        print(data)
         print(data['name'])
         if 'Patchpanel' in data['name']:
             data['device_type'] = '29'
@@ -444,7 +471,7 @@ class NETBOX(object):
         #     data['device_type'] ='25'
         #     print("Ablage found")
         #     return False
-        print (data)
+        print(data)
         if needs_updating:
             self.update_device(data, matched_by, py_netbox, has_problems)
 
@@ -472,7 +499,8 @@ class NETBOX(object):
     def update_device(self, data, match_type, py_netbox, has_problems=False):
 
         if match_type == "cf_rt_id":
-            device = py_netbox.dcim.devices.get(cf_rt_id=data["custom_fields"]["rt_id"])
+            device = py_netbox.dcim.devices.get(
+                cf_rt_id=data["custom_fields"]["rt_id"])
         elif match_type == "asset_tag":
             device = py_netbox.dcim.devices.get(asset_tag=data["asset_tag"])
         elif match_type == "name":
@@ -490,7 +518,8 @@ class NETBOX(object):
                 logger.info("attempting to update device status to failed")
                 device.update({"status": "failed"})
             else:
-                logger.info("will not update device status to failed as its been modified in NB")
+                logger.info(
+                    "will not update device status to failed as its been modified in NB")
 
     def create_device_interfaces(self, dev_id, dev_ints, ip_ints, force_int_type=False, int_type=None):
         print(f"checking for device via rt_dev_id:{dev_id}")
@@ -502,10 +531,12 @@ class NETBOX(object):
         dev_type = "device"
 
         if isinstance(nb_device, type(None)):
-            logger.debug("did not find a device with that rt_id, will check for a vm now")
+            logger.debug(
+                "did not find a device with that rt_id, will check for a vm now")
             print("rt_id:")
             print(dev_id)
-            nb_device = py_netbox.virtualization.virtual_machines.get(cf_rt_id=dev_id)
+            nb_device = py_netbox.virtualization.virtual_machines.get(
+                cf_rt_id=dev_id)
             dev_type = "vm"
             if not isinstance(nb_device, type(None)):
                 logger.debug("found vm")
@@ -515,9 +546,11 @@ class NETBOX(object):
             return False
 
         if dev_type == "device":
-            nb_dev_ints = {str(item): item for item in self.py_netbox.dcim.interfaces.filter(device_id=int(nb_device.id))}
+            nb_dev_ints = {str(item): item for item in self.py_netbox.dcim.interfaces.filter(
+                device_id=int(nb_device.id))}
         elif dev_type == "vm":
-            nb_dev_ints = {str(item): item for item in self.py_netbox.virtualization.interfaces.filter(virtual_machine_id=int(nb_device.id))}
+            nb_dev_ints = {str(item): item for item in self.py_netbox.virtualization.interfaces.filter(
+                virtual_machine_id=int(nb_device.id))}
         # pp.pprint(nb_dev_ints)
         if not int_type:
             int_type = "other"
@@ -525,7 +558,8 @@ class NETBOX(object):
         print(f"ip_ints: {ip_ints}")
 
         for dev_int in ip_ints:
-            dev_int = dev_int.strip("\t")  # somehow i found an interafce with a tab at the end..
+            # somehow i found an interafce with a tab at the end..
+            dev_int = dev_int.strip("\t")
             if isinstance(dev_int, list):
                 description = f"{dev_int[2]} rt_import"
             else:
@@ -546,7 +580,8 @@ class NETBOX(object):
                     response = py_netbox.dcim.interfaces.create(dev_data)
                 elif dev_type == "vm":
                     dev_data["virtual_machine"] = nb_device.id
-                    response = py_netbox.virtualization.interfaces.create(dev_data)
+                    response = py_netbox.virtualization.interfaces.create(
+                        dev_data)
                 nb_dev_ints[dev_int] = response
             else:
                 if not nb_dev_ints[dev_int].description == description:
@@ -566,17 +601,21 @@ class NETBOX(object):
                     print(nb_ip.update(ip_update))
                 else:
                     split_ip = ip.split("/")[0]
-                    nb_ip2 = self.py_netbox.ipam.ip_addresses.get(address=split_ip)
+                    nb_ip2 = self.py_netbox.ipam.ip_addresses.get(
+                        address=split_ip)
                     if nb_ip2:
-                        logger.debug("attempting to assign ip. found by removing /")
+                        logger.debug(
+                            "attempting to assign ip. found by removing /")
                         print(nb_ip2.update(ip_update))
                     else:
                         ip_update["address"] = ip
-                        logger.debug(f"ip {ip} does not yet exist in nb. attempting create and assignment")
+                        logger.debug(
+                            f"ip {ip} does not yet exist in nb. attempting create and assignment")
                         try:
                             print(self.py_netbox.ipam.ip_addresses.create(ip_update))
                         except:
-                            logger.error("failed to create ip. probably a duplicate")
+                            logger.error(
+                                "failed to create ip. probably a duplicate")
 
         for dev_int in dev_ints:
 
@@ -614,16 +653,19 @@ class NETBOX(object):
                             "isdn s0": "other",
                             "dc": "other",
                         }
-                        int_type = dev_int[2].lower().split("dwdm80")[0].split("(")[0].strip()
+                        int_type = dev_int[2].lower().split(
+                            "dwdm80")[0].split("(")[0].strip()
                         if int_type in map_list.keys():
                             int_type = map_list[int_type]
-                    int_data = {"name": dev_int[0], "type": int_type, "enabled": connected, "description": description}
+                    int_data = {"name": dev_int[0], "type": int_type,
+                                "enabled": connected, "description": description}
                     if dev_type == "device":
                         int_data["device"] = device = nb_device.id
                         response = py_netbox.dcim.interfaces.create(int_data)
                     elif dev_type == "vm":
                         int_data["virtual_machine"] = nb_device.id
-                        response = py_netbox.virtualization.interfaces.create(int_data)
+                        response = py_netbox.virtualization.interfaces.create(
+                            int_data)
                     nb_dev_ints[dev_int[0]] = response
                 else:
                     if not nb_dev_ints[dev_int[0]].description == description:
@@ -653,7 +695,8 @@ class NETBOX(object):
         for location_data in locations:
             rt_id = location_data["custom_fields"]["rt_id"]
             if rt_id:
-                locations_by_rt_id[location_data["custom_fields"]["rt_id"]] = location_data
+                locations_by_rt_id[location_data["custom_fields"]
+                                   ["rt_id"]] = location_data
         return locations_by_rt_id
 
     def manage_rooms(self, roomsdata):
@@ -665,7 +708,8 @@ class NETBOX(object):
         for location_data in locations:
             rt_id = location_data["custom_fields"]["rt_id"]
             if rt_id:
-                locations_by_rt_id[location_data["custom_fields"]["rt_id"]] = location_data
+                locations_by_rt_id[location_data["custom_fields"]
+                                   ["rt_id"]] = location_data
         # pp.pprint(locations_by_rt_id)
         for room_id, room_data in roomsdata.items():
             pp.pprint(room_data)
@@ -683,9 +727,11 @@ class NETBOX(object):
                     }
                     resp = nb.dcim.locations.create(nb_room_data)
                     if resp:
-                        logger.debug(f"created location {room_data['row_name']} ")
+                        logger.debug(
+                            f"created location {room_data['row_name']} ")
                     else:
-                        logger.error(f"failed to create location {room_data['row_name']} ")
+                        logger.error(
+                            f"failed to create location {room_data['row_name']} ")
                         pp.pprint(room_data)
 
             # exit(1)
@@ -701,12 +747,14 @@ class NETBOX(object):
 
     # modified/sourced from from: https://github.com/minitriga/Netbox-Device-Type-Library-Import
     def createManufacturers(self, vendors, nb):
-        all_manufacturers = {str(item): item for item in nb.dcim.manufacturers.all()}
+        all_manufacturers = {
+            str(item): item for item in nb.dcim.manufacturers.all()}
         need_manufacturers = []
         for vendor in vendors:
             try:
                 manGet = all_manufacturers[vendor["name"]]
-                logger.debug(f"Manufacturer Exists: {manGet.name} - {manGet.id}")
+                logger.debug(
+                    f"Manufacturer Exists: {manGet.name} - {manGet.id}")
             except KeyError:
                 need_manufacturers.append(vendor)
 
@@ -718,7 +766,8 @@ class NETBOX(object):
             try:
                 manSuccess = nb.dcim.manufacturers.create(need_manufacturers)
                 for man in manSuccess:
-                    logger.debug(f"Manufacturer Created: {man.name} - " + f"{man.id}")
+                    logger.debug(
+                        f"Manufacturer Created: {man.name} - " + f"{man.id}")
                     # counter.update({'manufacturer': 1})
                 created = True
                 count = 3
@@ -730,12 +779,14 @@ class NETBOX(object):
 
     # modified/sourced from from: https://github.com/minitriga/Netbox-Device-Type-Library-Import
     def createInterfaces(self, interfaces, deviceType, nb):
-        all_interfaces = {str(item): item for item in nb.dcim.interface_templates.filter(devicetype_id=deviceType)}
+        all_interfaces = {str(item): item for item in nb.dcim.interface_templates.filter(
+            devicetype_id=deviceType)}
         need_interfaces = []
         for interface in interfaces:
             try:
                 ifGet = all_interfaces[interface["name"]]
-                logger.debug(f"Interface Template Exists: {ifGet.name} - {ifGet.type}" + f" - {ifGet.device_type.id} - {ifGet.id}")
+                logger.debug(
+                    f"Interface Template Exists: {ifGet.name} - {ifGet.type}" + f" - {ifGet.device_type.id} - {ifGet.id}")
             except KeyError:
                 interface["device_type"] = deviceType
                 need_interfaces.append(interface)
@@ -748,7 +799,8 @@ class NETBOX(object):
             try:
                 ifSuccess = nb.dcim.interface_templates.create(need_interfaces)
                 for intf in ifSuccess:
-                    logger.debug(f"Interface Template Created: {intf.name} - " + f"{intf.type} - {intf.device_type.id} - " + f"{intf.id}")
+                    logger.debug(
+                        f"Interface Template Created: {intf.name} - " + f"{intf.type} - {intf.device_type.id} - " + f"{intf.id}")
                     # counter.update({'updated': 1})
                     created = True
                     count = 3
@@ -760,12 +812,14 @@ class NETBOX(object):
 
     # modified/sourced from from: https://github.com/minitriga/Netbox-Device-Type-Library-Import
     def createConsolePorts(self, consoleports, deviceType, nb):
-        all_consoleports = {str(item): item for item in nb.dcim.console_port_templates.filter(devicetype_id=deviceType)}
+        all_consoleports = {str(item): item for item in nb.dcim.console_port_templates.filter(
+            devicetype_id=deviceType)}
         need_consoleports = []
         for consoleport in consoleports:
             try:
                 cpGet = all_consoleports[consoleport["name"]]
-                logger.debug(f"Console Port Template Exists: {cpGet.name} - " + f"{cpGet.type} - {cpGet.device_type.id} - {cpGet.id}")
+                logger.debug(
+                    f"Console Port Template Exists: {cpGet.name} - " + f"{cpGet.type} - {cpGet.device_type.id} - {cpGet.id}")
             except KeyError:
                 consoleport["device_type"] = deviceType
                 need_consoleports.append(consoleport)
@@ -776,9 +830,11 @@ class NETBOX(object):
         count = 0
         while created == False and count < 3:
             try:
-                cpSuccess = nb.dcim.console_port_templates.create(need_consoleports)
+                cpSuccess = nb.dcim.console_port_templates.create(
+                    need_consoleports)
                 for port in cpSuccess:
-                    logger.debug(f"Console Port Created: {port.name} - " + f"{port.type} - {port.device_type.id} - " + f"{port.id}")
+                    logger.debug(
+                        f"Console Port Created: {port.name} - " + f"{port.type} - {port.device_type.id} - " + f"{port.id}")
                     # counter.update({'updated': 1})
                     created = True
                     count = 3
@@ -790,12 +846,14 @@ class NETBOX(object):
 
     # modified/sourced from from: https://github.com/minitriga/Netbox-Device-Type-Library-Import
     def createPowerPorts(self, powerports, deviceType, nb):
-        all_power_ports = {str(item): item for item in nb.dcim.power_port_templates.filter(devicetype_id=deviceType)}
+        all_power_ports = {str(item): item for item in nb.dcim.power_port_templates.filter(
+            devicetype_id=deviceType)}
         need_power_ports = []
         for powerport in powerports:
             try:
                 ppGet = all_power_ports[powerport["name"]]
-                logger.debug(f"Power Port Template Exists: {ppGet.name} - " + f"{ppGet.type} - {ppGet.device_type.id} - {ppGet.id}")
+                logger.debug(
+                    f"Power Port Template Exists: {ppGet.name} - " + f"{ppGet.type} - {ppGet.device_type.id} - {ppGet.id}")
                 print("!!!1!!!")
                 breakpoint()
             except KeyError:
@@ -809,9 +867,11 @@ class NETBOX(object):
         count = 0
         while created == False and count < 3:
             try:
-                ppSuccess = nb.dcim.power_port_templates.create(need_power_ports)
+                ppSuccess = nb.dcim.power_port_templates.create(
+                    need_power_ports)
                 for pp in ppSuccess:
-                    logger.debug(f"Interface Template Created: {pp.name} - " + f"{pp.type} - {pp.device_type.id} - " + f"{pp.id}")
+                    logger.debug(
+                        f"Interface Template Created: {pp.name} - " + f"{pp.type} - {pp.device_type.id} - " + f"{pp.id}")
                     # counter.update({'updated': 1})
                     created = True
                     count = 3
@@ -823,12 +883,14 @@ class NETBOX(object):
 
     # modified/sourced from from: https://github.com/minitriga/Netbox-Device-Type-Library-Import
     def createConsoleServerPorts(self, consoleserverports, deviceType, nb):
-        all_consoleserverports = {str(item): item for item in nb.dcim.console_server_port_templates.filter(devicetype_id=deviceType)}
+        all_consoleserverports = {str(
+            item): item for item in nb.dcim.console_server_port_templates.filter(devicetype_id=deviceType)}
         need_consoleserverports = []
         for csport in consoleserverports:
             try:
                 cspGet = all_consoleserverports[csport["name"]]
-                logger.debug(f"Console Server Port Template Exists: {cspGet.name} - " + f"{cspGet.type} - {cspGet.device_type.id} - " + f"{cspGet.id}")
+                logger.debug(f"Console Server Port Template Exists: {cspGet.name} - " +
+                             f"{cspGet.type} - {cspGet.device_type.id} - " + f"{cspGet.id}")
             except KeyError:
                 csport["device_type"] = deviceType
                 need_consoleserverports.append(csport)
@@ -839,9 +901,11 @@ class NETBOX(object):
         count = 0
         while created == False and count < 3:
             try:
-                cspSuccess = nb.dcim.console_server_port_templates.create(need_consoleserverports)
+                cspSuccess = nb.dcim.console_server_port_templates.create(
+                    need_consoleserverports)
                 for csp in cspSuccess:
-                    logger.debug(f"Console Server Port Created: {csp.name} - " + f"{csp.type} - {csp.device_type.id} - " + f"{csp.id}")
+                    logger.debug(
+                        f"Console Server Port Created: {csp.name} - " + f"{csp.type} - {csp.device_type.id} - " + f"{csp.id}")
                     # counter.update({'updated': 1})
                     created = True
                     count = 3
@@ -853,12 +917,14 @@ class NETBOX(object):
 
     # modified/sourced from from: https://github.com/minitriga/Netbox-Device-Type-Library-Import
     def createFrontPorts(self, frontports, deviceType, nb):
-        all_frontports = {str(item): item for item in nb.dcim.front_port_templates.filter(devicetype_id=deviceType)}
+        all_frontports = {str(item): item for item in nb.dcim.front_port_templates.filter(
+            devicetype_id=deviceType)}
         need_frontports = []
         for frontport in frontports:
             try:
                 fpGet = all_frontports[frontport["name"]]
-                logger.debug(f"Front Port Template Exists: {fpGet.name} - " + f"{fpGet.type} - {fpGet.device_type.id} - {fpGet.id}")
+                logger.debug(
+                    f"Front Port Template Exists: {fpGet.name} - " + f"{fpGet.type} - {fpGet.device_type.id} - {fpGet.id}")
             except KeyError:
                 frontport["device_type"] = deviceType
                 need_frontports.append(frontport)
@@ -866,20 +932,24 @@ class NETBOX(object):
         if not need_frontports:
             return
 
-        all_rearports = {str(item): item for item in nb.dcim.rear_port_templates.filter(devicetype_id=deviceType)}
+        all_rearports = {str(item): item for item in nb.dcim.rear_port_templates.filter(
+            devicetype_id=deviceType)}
         for port in need_frontports:
             try:
                 rpGet = all_rearports[port["rear_port"]]
                 port["rear_port"] = rpGet.id
             except KeyError:
-                logger.debug(f'Could not find Rear Port for Front Port: {port["name"]} - ' + f'{port["type"]} - {deviceType}')
+                logger.debug(
+                    f'Could not find Rear Port for Front Port: {port["name"]} - ' + f'{port["type"]} - {deviceType}')
         created = False
         count = 0
         while created == False and count < 3:
             try:
-                fpSuccess = nb.dcim.front_port_templates.create(need_frontports)
+                fpSuccess = nb.dcim.front_port_templates.create(
+                    need_frontports)
                 for fp in fpSuccess:
-                    logger.debug(f"Front Port Created: {fp.name} - " + f"{fp.type} - {fp.device_type.id} - " + f"{fp.id}")
+                    logger.debug(
+                        f"Front Port Created: {fp.name} - " + f"{fp.type} - {fp.device_type.id} - " + f"{fp.id}")
                     # counter.update({'updated': 1})
                     created = True
                     count = 3
@@ -891,12 +961,14 @@ class NETBOX(object):
 
     # modified/sourced from from: https://github.com/minitriga/Netbox-Device-Type-Library-Import
     def createRearPorts(self, rearports, deviceType, nb):
-        all_rearports = {str(item): item for item in nb.dcim.rear_port_templates.filter(devicetype_id=deviceType)}
+        all_rearports = {str(item): item for item in nb.dcim.rear_port_templates.filter(
+            devicetype_id=deviceType)}
         need_rearports = []
         for rearport in rearports:
             try:
                 rpGet = all_rearports[rearport["name"]]
-                logger.debug(f"Rear Port Template Exists: {rpGet.name} - {rpGet.type}" + f" - {rpGet.device_type.id} - {rpGet.id}")
+                logger.debug(
+                    f"Rear Port Template Exists: {rpGet.name} - {rpGet.type}" + f" - {rpGet.device_type.id} - {rpGet.id}")
             except KeyError:
                 rearport["device_type"] = deviceType
                 need_rearports.append(rearport)
@@ -909,7 +981,8 @@ class NETBOX(object):
             try:
                 rpSuccess = nb.dcim.rear_port_templates.create(need_rearports)
                 for rp in rpSuccess:
-                    logger.debug(f"Rear Port Created: {rp.name} - {rp.type}" + f" - {rp.device_type.id} - {rp.id}")
+                    logger.debug(
+                        f"Rear Port Created: {rp.name} - {rp.type}" + f" - {rp.device_type.id} - {rp.id}")
                     # counter.update({'updated': 1})
                     created = True
                     count = 3
@@ -921,12 +994,14 @@ class NETBOX(object):
 
     # modified/sourced from from: https://github.com/minitriga/Netbox-Device-Type-Library-Import
     def createDeviceBays(self, devicebays, deviceType, nb):
-        all_devicebays = {str(item): item for item in nb.dcim.device_bay_templates.filter(devicetype_id=deviceType)}
+        all_devicebays = {str(item): item for item in nb.dcim.device_bay_templates.filter(
+            devicetype_id=deviceType)}
         need_devicebays = []
         for devicebay in devicebays:
             try:
                 dbGet = all_devicebays[devicebay["name"]]
-                logger.debug(f"Device Bay Template Exists: {dbGet.name} - " + f"{dbGet.device_type.id} - {dbGet.id}")
+                logger.debug(
+                    f"Device Bay Template Exists: {dbGet.name} - " + f"{dbGet.device_type.id} - {dbGet.id}")
             except KeyError:
                 devicebay["device_type"] = deviceType
                 need_devicebays.append(devicebay)
@@ -937,9 +1012,11 @@ class NETBOX(object):
         count = 0
         while created == False and count < 3:
             try:
-                dbSuccess = nb.dcim.device_bay_templates.create(need_devicebays)
+                dbSuccess = nb.dcim.device_bay_templates.create(
+                    need_devicebays)
                 for db in dbSuccess:
-                    logger.debug(f"Device Bay Created: {db.name} - " + f"{db.device_type.id} - {db.id}")
+                    logger.debug(
+                        f"Device Bay Created: {db.name} - " + f"{db.device_type.id} - {db.id}")
                     # counter.update({'updated': 1})
                 created = True
                 count = 3
@@ -951,12 +1028,14 @@ class NETBOX(object):
 
     # modified/sourced from from: https://github.com/minitriga/Netbox-Device-Type-Library-Import
     def createPowerOutlets(self, poweroutlets, deviceType, nb):
-        all_poweroutlets = {str(item): item for item in nb.dcim.power_outlet_templates.filter(devicetype_id=deviceType)}
+        all_poweroutlets = {str(item): item for item in nb.dcim.power_outlet_templates.filter(
+            devicetype_id=deviceType)}
         need_poweroutlets = []
         for poweroutlet in poweroutlets:
             try:
                 poGet = all_poweroutlets[poweroutlet["name"]]
-                logger.debug(f"Power Outlet Template Exists: {poGet.name} - " + f"{poGet.type} - {poGet.device_type.id} - {poGet.id}")
+                logger.debug(
+                    f"Power Outlet Template Exists: {poGet.name} - " + f"{poGet.type} - {poGet.device_type.id} - {poGet.id}")
             except KeyError:
                 poweroutlet["device_type"] = deviceType
                 need_poweroutlets.append(poweroutlet)
@@ -964,7 +1043,8 @@ class NETBOX(object):
         if not need_poweroutlets:
             return
 
-        all_power_ports = {str(item): item for item in nb.dcim.power_port_templates.filter(devicetype_id=deviceType)}
+        all_power_ports = {str(item): item for item in nb.dcim.power_port_templates.filter(
+            devicetype_id=deviceType)}
         for outlet in need_poweroutlets:
             try:
                 ppGet = all_power_ports[outlet["power_port"]]
@@ -975,9 +1055,11 @@ class NETBOX(object):
         count = 0
         while created == False and count < 3:
             try:
-                poSuccess = nb.dcim.power_outlet_templates.create(need_poweroutlets)
+                poSuccess = nb.dcim.power_outlet_templates.create(
+                    need_poweroutlets)
                 for po in poSuccess:
-                    logger.debug(f"Power Outlet Created: {po.name} - " + f"{po.type} - {po.device_type.id} - " + f"{po.id}")
+                    logger.debug(
+                        f"Power Outlet Created: {po.name} - " + f"{po.type} - {po.device_type.id} - " + f"{po.id}")
                     # counter.update({'updated': 1})
                     created = True
                     count = 3
@@ -990,16 +1072,19 @@ class NETBOX(object):
     # modified/sourced from from: https://github.com/minitriga/Netbox-Device-Type-Library-Import
     def createDeviceTypes(self, deviceTypes, nb=None):
         nb = self.py_netbox
-        all_device_types = {str(item): item for item in nb.dcim.device_types.all()}
+        all_device_types = {
+            str(item): item for item in nb.dcim.device_types.all()}
         for deviceType in deviceTypes:
             try:
                 dt = all_device_types[deviceType["model"]]
-                logger.debug(f"Device Type Exists: {dt.manufacturer.name} - " + f"{dt.model} - {dt.id}")
+                logger.debug(
+                    f"Device Type Exists: {dt.manufacturer.name} - " + f"{dt.model} - {dt.id}")
             except KeyError:
                 try:
                     dt = nb.dcim.device_types.create(deviceType)
                     # counter.update({'added': 1})
-                    logger.debug(f"Device Type Created: {dt.manufacturer.name} - " + f"{dt.model} - {dt.id}")
+                    logger.debug(
+                        f"Device Type Created: {dt.manufacturer.name} - " + f"{dt.model} - {dt.id}")
                 except Exception as e:
                     logger.debug(e.error)
 
@@ -1020,7 +1105,8 @@ class NETBOX(object):
                 self.createPowerOutlets(deviceType["power-outlets"], dt.id, nb)
             if "console-server-ports" in deviceType:
                 logger.debug("console-server-ports")
-                self.createConsoleServerPorts(deviceType["console-server-ports"], dt.id, nb)
+                self.createConsoleServerPorts(
+                    deviceType["console-server-ports"], dt.id, nb)
             if "rear-ports" in deviceType:
                 logger.debug("rear-ports")
                 self.createRearPorts(deviceType["rear-ports"], dt.id, nb)
@@ -1055,25 +1141,32 @@ class NETBOX(object):
     def createCustomFields(self, attributes):
         logger.debug(attributes)
         nb = self.py_netbox
-        all_custom_fields = {str(item): item for item in nb.extras.custom_fields.all()}
+        all_custom_fields = {
+            str(item): item for item in nb.extras.custom_fields.all()}
         logger.debug(all_custom_fields)
         for custom_field in attributes:
             custom_field["label"] = copy.copy(custom_field["name"])
-            custom_field["name"] = str(slugify.slugify(custom_field["name"], separator="_", replacements=[["/", ""], ["-", "_"]]))
+            custom_field["name"] = str(slugify.slugify(
+                custom_field["name"], separator="_", replacements=[["/", ""], ["-", "_"]]))
             try:
                 # print(custom_field["name"])
                 # print(all_custom_fields[custom_field["name"]])
                 if custom_field["label"] in all_custom_fields.keys():
                     dt = all_custom_fields[custom_field["label"]]
                     if not str(dt.name) == custom_field["name"]:
-                        logger.debug(f"name is not correctly set on custom field {custom_field['label']}, updating, this may take some time")
-                        dt.update({"name": custom_field["name"], "label": custom_field["label"]})
-                        all_custom_fields = {str(item): item for item in nb.extras.custom_fields.all()}
+                        logger.debug(
+                            f"name is not correctly set on custom field {custom_field['label']}, updating, this may take some time")
+                        dt.update(
+                            {"name": custom_field["name"], "label": custom_field["label"]})
+                        all_custom_fields = {
+                            str(item): item for item in nb.extras.custom_fields.all()}
                 dt = all_custom_fields[custom_field["name"]]
-                logger.debug(f"Custom Field Exists: {dt.name} - " + f"{dt.type}")
+                logger.debug(
+                    f"Custom Field Exists: {dt.name} - " + f"{dt.type}")
             except KeyError:
                 try:
-                    custom_field["type"] = self.change_attrib_type(custom_field["type"])
+                    custom_field["type"] = self.change_attrib_type(
+                        custom_field["type"])
                     custom_field["content_types"] = [
                         "circuits.circuit",
                         "circuits.circuittype",
@@ -1125,10 +1218,12 @@ class NETBOX(object):
                     ]
                     dt = nb.extras.custom_fields.create(custom_field)
                     # counter.update({'added': 1})
-                    logger.debug(f"Device Type Created: {dt.name} - " + f"{dt.type} ")
+                    logger.debug(
+                        f"Device Type Created: {dt.name} - " + f"{dt.type} ")
                     # print("test")
                 except Exception as e:
-                    logger.error(f"failed to add custom field: {custom_field['name']}")
+                    logger.error(
+                        f"failed to add custom field: {custom_field['name']}")
                     logger.debug(e)
 
     def get_rack_by_rt_id(self, rt_id):
@@ -1171,26 +1266,28 @@ class NETBOX(object):
             if config["Misc"]["SITE_NAME_CLEANUP"]:
                 description = copy.deepcopy(name)
                 name = name.split(" (")[0]
-            site_data = {"description": description, "name": name, "slug": slugify.slugify(name), "custom_fields": {"rt_id": str(rt_id)}}
+            site_data = {"description": description, "name": name, "slug": slugify.slugify(
+                name), "custom_fields": {"rt_id": str(rt_id)}}
             if not name in current_sites:
                 pp.pprint(f"{name} not in netbox, adding")
                 print(nb.dcim.sites.create(site_data))
             else:
                 site = nb.dcim.sites.get(name=name)
                 site.update(site_data)
-      
-    def create_cable(self, int_1_id, int_2_id,device_a,device_b):
+
+    def create_cable(self, int_1_id, int_2_id, device_a, device_b):
 
         nb = self.py_netbox
         #xyz = nb.dcim.interface.objects.get()
         object_type_a = device_a["device_type"]
         object_type_b = device_b["device_type"]
+        print(int_1_id, int_2_id)
         data = {
             "termination_a_type": "dcim.interface",
-            "a_terminations": [{"object_type":object_type_a["display"],"object_id": object_type_a["id"]}],
+            "a_terminations": [{"object_type": object_type_a["display"], "object_id": object_type_a["id"]}],
 
             "termination_b_type": "dcim.interface",
-            "b_terminations": [{"object_type":object_type_b["display"],"object_id": object_type_b["id"]}]
+            "b_terminations": [{"object_type": object_type_b["display"], "object_id": object_type_b["id"]}]
 
         }
         print("data: 1500")
@@ -1199,7 +1296,8 @@ class NETBOX(object):
             created = nb.dcim.cables.create(data)
             pp.pprint(created)
         except Exception as e:
-            logger.debug("unable to create cable, usually means a cable already exists...")
+            logger.debug(
+                "unable to create cable, usually means a cable already exists...")
             logger.error(e)
             # breakpoint()
 
@@ -1207,7 +1305,8 @@ class NETBOX(object):
         print("connection_data: 1555")
         pp.pprint(connection_data)
         nb = self.py_netbox
-        local_device_obj = nb.dcim.devices.filter(cf_rt_id=connection_data ["local_device_rt_id"])
+        local_device_obj = nb.dcim.devices.filter(
+            cf_rt_id=connection_data["local_device_rt_id"])
         local_device = {str(item): dict(item) for item in local_device_obj}
         if bool(local_device):
             print("test")
@@ -1216,7 +1315,8 @@ class NETBOX(object):
         print("local_device:")
         pp.pprint(local_device)
 
-        remote_device_obj = nb.dcim.devices.filter(cf_rt_id=connection_data["remote_device"]["id"])
+        remote_device_obj = nb.dcim.devices.filter(
+            cf_rt_id=connection_data["remote_device"]["id"])
         remote_device = {str(item): dict(item) for item in remote_device_obj}
         if bool(remote_device):
             remote_device = list(remote_device.values())[0]
@@ -1225,27 +1325,32 @@ class NETBOX(object):
         print(remote_device)
         print("local device:")
         print(local_device)
-        if bool (local_device) and bool (remote_device):
+        if bool(local_device) and bool(remote_device):
             print("Mashalla, we made it!!")
-            local_device_ints_objs = nb.dcim.interfaces.filter (device_id=local_device["id"])
-            local_device_ints = {str(item): item for item  in local_device_ints_objs}
+            local_device_ints_objs = nb.dcim.interfaces.filter(
+                device_id=local_device["id"])
+            local_device_ints = {
+                str(item): item for item in local_device_ints_objs}
             print("local_device_ints: 1341")
             pp.pprint(local_device_ints)
-            remote_device_ints_objs = nb.dcim.interfaces.filter (device_id=remote_device["id"])
-            remote_device_ints = {str(item): item for item in remote_device_ints_objs }
+            remote_device_ints_objs = nb.dcim.interfaces.filter(
+                device_id=remote_device["id"])
+            remote_device_ints = {
+                str(item): item for item in remote_device_ints_objs}
             print("remote_device_ints:")
             pp.pprint(remote_device_ints)
 
             local_port_found = False
 
-            if connection_data ["local_port"] in local_device_ints.keys():
-                logger.debug ("found local_port in netbox")
+            if connection_data["local_port"] in local_device_ints.keys():
+                logger.debug("found local_port in netbox")
                 local_port_found = True
-                local_port = local_device_ints[connection_data ["local_port"]]
+                local_port = local_device_ints[connection_data["local_port"]]
                 # local_port_dict = {str(item): item for item in local_port}
 
             else:
-                logger.error(f"did not find local_port({connection_data['local_port']}) in netbox...")
+                logger.error(
+                    f"did not find local_port({connection_data['local_port']}) in netbox...")
 
             remote_port_found = False
 
@@ -1255,7 +1360,8 @@ class NETBOX(object):
                 remote_port = remote_device_ints[connection_data["remote_port"]]
                 # remote_port_dict = {str(item): item for item in remote_port}
             else:
-                logger.error(f"did not find remote_port({connection_data['remote_port']}) in netbox for device {remote_device['name']}")
+                logger.error(
+                    f"did not find remote_port({connection_data['remote_port']}) in netbox for device {remote_device['name']}")
 
             if local_port_found and remote_port_found:
                 # port may be set to Virtual if it didnt exist in device template when syned over. fix if needed
@@ -1264,15 +1370,17 @@ class NETBOX(object):
                 if str(local_port.type) == "Virtual":
                     local_port.update({"type": "other"})
                 print("Haligalli:")
-                print (local_port.id)
+                print(local_port.id)
                 print(remote_port.id)
                 pp.pprint(local_device)
                 pp.pprint(remote_device)
                 # the actual meat of the function.... why did it take soo much to get here? definately monday code....
-                self.create_cable(local_port.id, remote_port.id, local_device, remote_device)
+                self.create_cable(local_port.id, remote_port.id,
+                                  local_device, remote_device)
 
         else:
-            logger.warning("remote device doesnt exist in nb yet. connections will be added when it gets added")
+            logger.warning(
+                "remote device doesnt exist in nb yet. connections will be added when it gets added")
 
     def manage_vm(self, vm_data):
         nb = self.py_netbox
@@ -1297,22 +1405,29 @@ class NETBOX(object):
         vm_data["cluster"] = str(config["Misc"]["DEFAULT_VM_CLUSTER_ID"])
         if "rt_id_parent" in vm_data["custom_fields"].keys():
 
-            cluster = nb.virtualization.clusters.get(cf_rt_id=vm_data["custom_fields"]["rt_id_parent"])
+            cluster = nb.virtualization.clusters.get(
+                cf_rt_id=vm_data["custom_fields"]["rt_id_parent"])
             if cluster:
                 logger.debug(f"cluster {cluster.name} found in nb")
                 vm_data["cluster"] = cluster.id
             else:
-                parent_device = nb.dcim.devices.get(cf_rt_id=vm_data["custom_fields"]["rt_id_parent"])
+                parent_device = nb.dcim.devices.get(
+                    cf_rt_id=vm_data["custom_fields"]["rt_id_parent"])
                 if parent_device:
-                    logger.debug(f"parent {parent_device.name} found in nb, attempting to create matching cluster")
-                    cluster_type = nb.virtualization.cluster_types.get(name="rt_import")
+                    logger.debug(
+                        f"parent {parent_device.name} found in nb, attempting to create matching cluster")
+                    cluster_type = nb.virtualization.cluster_types.get(
+                        name="rt_import")
                     if not cluster_type:
-                        cluster_type = nb.virtualization.cluster_types.create({"name": "rt_import", "slug": "rt_import"})
+                        cluster_type = nb.virtualization.cluster_types.create(
+                            {"name": "rt_import", "slug": "rt_import"})
                         if not cluster_type:
-                            logger.debug("something went wrong. defaulting clusterid to conf")
+                            logger.debug(
+                                "something went wrong. defaulting clusterid to conf")
                             return vm_data
                     cluster = nb.virtualization.clusters.create(
-                        {"name": parent_device.name, "type": cluster_type.id, "custom_fields": {"rt_id": vm_data["custom_fields"]["rt_id_parent"]}}
+                        {"name": parent_device.name, "type": cluster_type.id, "custom_fields": {
+                            "rt_id": vm_data["custom_fields"]["rt_id_parent"]}}
                     )
                     if cluster:
                         logger.debug(f"cluster {cluster.name} created")
@@ -1337,7 +1452,8 @@ class NETBOX(object):
         nb = self.py_netbox
         if not netbox.all_prefixes:
             print("getting all prefixes(s) currently in netbox")
-            netbox.all_prefixes = {str(item): dict(item) for item in netbox.py_netbox.ipam.prefixes.all()}
+            netbox.all_prefixes = {str(item): dict(item)
+                                   for item in netbox.py_netbox.ipam.prefixes.all()}
             # print(json.dumps(netbox.all_prefixes))
             # exit()
         nb_all_prefixes = netbox.all_prefixes
@@ -1367,8 +1483,10 @@ class NETBOX(object):
             dev_type = "device"
 
             if isinstance(nb_device, type(None)):
-                logger.debug("did not find a device with that rt_id, will check for a vm now")
-                nb_device = py_netbox.virtualization.virtual_machines.get(cf_rt_id=str(object_id))
+                logger.debug(
+                    "did not find a device with that rt_id, will check for a vm now")
+                nb_device = py_netbox.virtualization.virtual_machines.get(
+                    cf_rt_id=str(object_id))
                 dev_type = "vm"
                 if not isinstance(nb_device, type(None)):
                     logger.debug("found vm")
@@ -1446,14 +1564,16 @@ class DB(object):
 
     def nb_role_id(self, role_name):
         if not self.nb_roles:
-            self.nb_roles = {str(item.name): dict(item) for item in py_netbox.dcim.device_roles.all()}
+            self.nb_roles = {str(item.name): dict(item)
+                             for item in py_netbox.dcim.device_roles.all()}
         if not role_name in self.nb_roles.keys():
             create_role = {
                 "name": role_name,
                 "slug": self.custom_field_name_slugger(role_name),
             }
             py_netbox.dcim.device_roles.create(create_role)
-            self.nb_roles = {str(item.name): dict(item) for item in py_netbox.dcim.device_roles.all()}
+            self.nb_roles = {str(item.name): dict(item)
+                             for item in py_netbox.dcim.device_roles.all()}
         return self.nb_roles[role_name]["id"]
 
     def get_ips(self):
@@ -1485,14 +1605,16 @@ class DB(object):
 
         if not netbox.all_prefixes:
             print("getting all prefixes(s) currently in netbox")
-            netbox.all_prefixes = {str(item): dict(item) for item in netbox.py_netbox.ipam.prefixes.all()}
+            netbox.all_prefixes = {str(item): dict(item)
+                                   for item in netbox.py_netbox.ipam.prefixes.all()}
             # print(json.dumps(netbox.all_prefixes))
             # exit()
         nb_all_prefixes = netbox.all_prefixes
 
         if not netbox.all_ips:
             print("getting all ip(s) currently in netbox")
-            netbox.all_ips = {str(f"{item}_{item.id}"): item for item in netbox.py_netbox.ipam.ip_addresses.all()}
+            netbox.all_ips = {str(
+                f"{item}_{item.id}"): item for item in netbox.py_netbox.ipam.ip_addresses.all()}
         nb_ips = netbox.all_ips
 
         print("checking ips")
@@ -1537,7 +1659,8 @@ class DB(object):
                             try:
                                 nb_ip_obj.delete()
                             except:
-                                logger.error("failed to delete. might already be gone")
+                                logger.error(
+                                    "failed to delete. might already be gone")
                         else:
                             found_in_nb = True
                             found_in_nb_obj = nb_ip_obj
@@ -1583,7 +1706,8 @@ class DB(object):
                             try:
                                 nb_ip_obj.delete()
                             except:
-                                logger.error("failed to delete. might already be gone")
+                                logger.error(
+                                    "failed to delete. might already be gone")
                         else:
                             found_in_nb = True
                             found_in_nb_obj = nb_ip_obj
@@ -1623,11 +1747,13 @@ class DB(object):
             cur2.close()
             self.con = None
         if not netbox.all_ips:
-            netbox.all_ips = {str(f"{item}_{item.id}"): item for item in netbox.py_netbox.ipam.ip_addresses.all()}
+            netbox.all_ips = {str(
+                f"{item}_{item.id}"): item for item in netbox.py_netbox.ipam.ip_addresses.all()}
         nb_ips = netbox.all_ips
         if not netbox.all_prefixes:
             print("getting all prefixes(s) currently in netbox")
-            netbox.all_prefixes = {str(item): dict(item) for item in netbox.py_netbox.ipam.prefixes.all()}
+            netbox.all_prefixes = {str(item): dict(item)
+                                   for item in netbox.py_netbox.ipam.prefixes.all()}
         nb_all_prefixes = netbox.all_prefixes
         for line in ips:
             net = {}
@@ -1669,7 +1795,8 @@ class DB(object):
                             try:
                                 nb_ip_obj.delete()
                             except:
-                                logger.error("failed to delete. might already be gone")
+                                logger.error(
+                                    "failed to delete. might already be gone")
                         else:
                             found_in_nb = True
                             found_in_nb_obj = nb_ip_obj
@@ -1710,7 +1837,8 @@ class DB(object):
                             try:
                                 nb_ip_obj.delete()
                             except:
-                                logger.error("failed to delete. might already be gone")
+                                logger.error(
+                                    "failed to delete. might already be gone")
                         else:
                             found_in_nb = True
                             found_in_nb_obj = nb_ip_obj
@@ -1769,13 +1897,16 @@ class DB(object):
                     # print(tag)
                     tags.append(self.tag_map[tag]["id"])
                 except:
-                    logger.debug("failed to find tag {} in lookup map".format(tag))
+                    logger.debug(
+                        "failed to find tag {} in lookup map".format(tag))
             if not vlan_id is None:
                 try:
-                    vlan = self.vlan_map["{}_{}".format(vlan_domain_id, vlan_id)]["id"]
+                    vlan = self.vlan_map["{}_{}".format(
+                        vlan_domain_id, vlan_id)]["id"]
                     subs.update({"vlan": vlan})
                 except:
-                    logger.debug("failed to find vlan for subnet {}".format(subnet))
+                    logger.debug(
+                        "failed to find vlan for subnet {}".format(subnet))
             else:
                 subs.update({"vlan": None})
             subs.update({"prefix": "/".join([subnet, str(mask)])})
@@ -1825,19 +1956,24 @@ class DB(object):
                     # print(tag)
                     tags.append(self.tag_map[tag]["id"])
                 except:
-                    logger.debug("failed to find tag {} in lookup map".format(tag))
+                    logger.debug(
+                        "failed to find tag {} in lookup map".format(tag))
             if not vlan_id is None:
                 try:
-                    vlan = self.vlan_map["{}_{}".format(vlan_domain_id, vlan_id)]["id"]
+                    vlan = self.vlan_map["{}_{}".format(
+                        vlan_domain_id, vlan_id)]["id"]
                     subs.update({"vlan": vlan})
                 except:
-                    logger.debug("failed to find vlan for subnet {}".format(subnet))
+                    logger.debug(
+                        "failed to find vlan for subnet {}".format(subnet))
             else:
                 subs.update({"vlan": None})
             subs.update({"prefix": "/".join([subnet, str(mask)])})
             ip_calc_net = ipcalc.Network(subs["prefix"])
-            ip_calc_net2 = ipcalc.Network(str(ip_calc_net.network()) + "/" + str(ip_calc_net.subnet()))
-            cleaned_prefix = str(ip_calc_net2.to_compressed()) + "/" + str(ip_calc_net2.subnet())
+            ip_calc_net2 = ipcalc.Network(
+                str(ip_calc_net.network()) + "/" + str(ip_calc_net.subnet()))
+            cleaned_prefix = str(ip_calc_net2.to_compressed()) + \
+                "/" + str(ip_calc_net2.subnet())
             subs.update({"prefix": cleaned_prefix})
             subs.update({"status": "active"})
             # subs.update({'mask_bits': str(mask)})
@@ -1910,7 +2046,8 @@ class DB(object):
                 attrib_val = attrib_data[4]
             attrib_name = self.custom_field_name_slugger(attrib_data[0])
             if attrib_data[1] == "date":
-                datetime_time = datetime.datetime.fromtimestamp(int(attrib_val))
+                datetime_time = datetime.datetime.fromtimestamp(
+                    int(attrib_val))
                 attribs[attrib_name] = datetime_time.strftime("%Y-%m-%d")
             else:
                 if remove_links:
@@ -1957,8 +2094,12 @@ class DB(object):
         for line in tags:
             attrib_type, attrib_name = line
             attributes.append({"name": attrib_name, "type": attrib_type})
-        attributes.append({"name": "rt_id", "type": "text", "filter_logic": "exact"})  # custom field for racktables source objid
-        attributes.append({"name": "rt_id_parent", "type": "text", "filter_logic": "exact"})  # used for child devices (vms) to link to parent (server)
+        # custom field for racktables source objid
+        attributes.append(
+            {"name": "rt_id", "type": "text", "filter_logic": "exact"})
+        # used for child devices (vms) to link to parent (server)
+        attributes.append(
+            {"name": "rt_id_parent", "type": "text", "filter_logic": "exact"})
         attributes.append({"name": "Visible label", "type": "text"})
         attributes.append({"name": "SW type", "type": "text"})
         attributes.append({"name": "Operating System", "type": "text"})
@@ -2045,7 +2186,8 @@ class DB(object):
             vlan_domain_id, vlan_id, vlan_type, vlan_descr = line
             vlan = {}
             vlan["group"] = self.vlan_group_map[vlan_domain_id]["id"]
-            vlan["name"] = vlan_descr[: min(len(vlan_descr), 64)]  # limit char lenght
+            # limit char lenght
+            vlan["name"] = vlan_descr[: min(len(vlan_descr), 64)]
             vlan["vid"] = vlan_id
             vlan["description"] = vlan_descr
             logger.debug("adding vlan {}".format(vlan))
@@ -2115,7 +2257,8 @@ class DB(object):
         for rec in raw:
             rack_id, rack_name, height, row_id, row_name, location_id, location_name, asset_no, comment = rec
 
-            rows_map.update({row_id: {"site_name": location_name, "site_id": location_id, "row_name": row_name, "row_id": row_id}})
+            rows_map.update({row_id: {"site_name": location_name,
+                            "site_id": location_id, "row_name": row_name, "row_id": row_id}})
 
             # prepare rack data. We will upload it a little bit later
             rack = {}
@@ -2150,7 +2293,8 @@ class DB(object):
         for rack in racks:
             netbox_rack = {}
             netbox_rack["name"] = rack["name"]
-            logger.debug("attempting to get site {} from netbox dict".format(rack["building"]))
+            logger.debug(
+                "attempting to get site {} from netbox dict".format(rack["building"]))
             netbox_rack["site"] = netbox_sites_by_comment[rack["building"]]["id"]
             netbox_rack["comments"] = rack["room"] + rack["comments"]
             netbox_rack["custom_fields"] = {}
@@ -2166,7 +2310,8 @@ class DB(object):
                     # print(tag)
                     tags.append(self.tag_map[tag]["id"])
                 except:
-                    logger.debug("failed to find tag {} in lookup map".format(tag))
+                    logger.debug(
+                        "failed to find tag {} in lookup map".format(tag))
             netbox_rack["tags"] = tags
             if rack["size"] == None:
                 netbox_rack["u_height"] = 100
@@ -2225,7 +2370,8 @@ class DB(object):
         # two or more devices based on same HW model have different size in rack
         # here we try to find and set smallest U for device
         hwsize_map = {}
-        logger.debug("about to get hardware sizes for existing services. this may take some time")
+        logger.debug(
+            "about to get hardware sizes for existing services. this may take some time")
         for line in data:
             line = [0 if not x else x for x in line]
             data_id, description, name, asset, dtype, device_section = line
@@ -2358,7 +2504,8 @@ class DB(object):
                     floor = floor - (height - 1)
                 return floor, height, depth, mount
             elif interior and not rear and not front:
-                logger.warn("interior only mounted device. this is not nb compatible")
+                logger.warn(
+                    "interior only mounted device. this is not nb compatible")
                 return None, None, None, None
             else:
                 return None, None, None, None
@@ -2389,11 +2536,13 @@ class DB(object):
                     del device_type["description"]
                     del device_type["rt_dev_id"]
                 rt_device_types[key] = device_type
-        device_templates = self.match_device_types_to_netbox_templates(rt_device_types)
+        device_templates = self.match_device_types_to_netbox_templates(
+            rt_device_types)
         # pp.pprint(device_templates)
         for device_type in device_templates["matched"].keys():
             # print(device_type)
-            netbox.post_device_type(device_type, device_templates["matched"][device_type])
+            netbox.post_device_type(
+                device_type, device_templates["matched"][device_type])
 
     def match_device_types_to_netbox_templates(self, device_types):
         unmatched = {}
@@ -2410,7 +2559,8 @@ class DB(object):
         logger.debug("device templates found for importing: ")
         pp.pprint(matched)
 
-        logger.debug("the following device types have no matching device templates:")
+        logger.debug(
+            "the following device types have no matching device templates:")
         for unmatched_device_type in sorted(unmatched.keys()):
             logger.debug(unmatched_device_type)
         if not config["Misc"]["SKIP_DEVICES_WITHOUT_TEMPLATE"] == True:
@@ -2510,10 +2660,12 @@ class DB(object):
         if not self.all_ports:
             self.get_ports()
         if not netbox.device_types:
-            netbox.device_types = {str(item.slug): dict(item) for item in py_netbox.dcim.device_types.all()}
+            netbox.device_types = {str(item.slug): dict(item)
+                                   for item in py_netbox.dcim.device_types.all()}
 
         if not config["Misc"]["DEFAULT_DEVICE_ROLE_ID"]:
-            roles = {str(item.name): dict(item) for item in py_netbox.dcim.device_roles.all()}
+            roles = {str(item.name): dict(item)
+                     for item in py_netbox.dcim.device_roles.all()}
             pp.pprint(roles)
             if not "rt_import" in roles.keys():
                 create_role = {
@@ -2521,14 +2673,17 @@ class DB(object):
                     "slug": "rt_import",
                 }
                 py_netbox.dcim.device_roles.create(create_role)
-            roles = {str(item.name): dict(item) for item in py_netbox.dcim.device_roles.all()}
+            roles = {str(item.name): dict(item)
+                     for item in py_netbox.dcim.device_roles.all()}
             config["Misc"]["DEFAULT_DEVICE_ROLE_ID"] = roles["rt_import"]["id"]
 
         else:
             # check to see if device_role_id exists in nb. if not. blow up
-            roles = {str(item.id): dict(item) for item in py_netbox.dcim.device_roles.all()}
+            roles = {str(item.id): dict(item)
+                     for item in py_netbox.dcim.device_roles.all()}
             if not str(config["Misc"]["DEFAULT_DEVICE_ROLE_ID"]) in roles:
-                logger.error(f"No device-role found in netbox with id: {config['Misc']['DEFAULT_DEVICE_ROLE_ID']}")
+                logger.error(
+                    f"No device-role found in netbox with id: {config['Misc']['DEFAULT_DEVICE_ROLE_ID']}")
                 exit(5)
 
         if not self.con:
@@ -2763,7 +2918,8 @@ class DB(object):
                         opsys = opsys.replace("%GSKIP%", " ")
                     if "%GPASS%" in opsys:
                         opsys = opsys.replace("%GPASS%", " ")
-                    devicedata["custom_fields"][self.custom_field_name_slugger("Operating System")] = str(opsys)
+                    devicedata["custom_fields"][self.custom_field_name_slugger(
+                        "Operating System")] = str(opsys)
                 elif "SW type" in x:
                     opsys = dict_dictvalue
                     opsys = self.remove_links(opsys)
@@ -2771,7 +2927,8 @@ class DB(object):
                         opsys = opsys.replace("%GSKIP%", " ")
                     if "%GPASS%" in opsys:
                         opsys = opsys.replace("%GPASS%", " ")
-                    devicedata["custom_fields"][self.custom_field_name_slugger("SW type")] = str(opsys)
+                    devicedata["custom_fields"][self.custom_field_name_slugger(
+                        "SW type")] = str(opsys)
 
                 elif "Server Hardware" in x:
                     hardware = dict_dictvalue
@@ -2794,26 +2951,32 @@ class DB(object):
                         hardware = hardware.replace("\t", " ")
                 elif "BiosRev" in x:
                     biosrev = self.remove_links(dict_dictvalue)
-                    devicedata["custom_fields"][self.custom_field_name_slugger("BiosRev")] = biosrev
+                    devicedata["custom_fields"][self.custom_field_name_slugger(
+                        "BiosRev")] = biosrev
                 else:
                     if not rattr_name == None:
                         if attrib_type == "dict":
                             attrib_value_unclean = dict_dictvalue
                         else:
                             attrib_value_unclean = attrib_value
-                        cleaned_val = netbox.cleanup_attrib_value(attrib_value_unclean, attrib_type)
+                        cleaned_val = netbox.cleanup_attrib_value(
+                            attrib_value_unclean, attrib_type)
                         # print(cleaned_val)
-                        devicedata["custom_fields"][self.custom_field_name_slugger(rattr_name)] = cleaned_val
+                        devicedata["custom_fields"][self.custom_field_name_slugger(
+                            rattr_name)] = cleaned_val
                         config_cust_field_map = config["Misc"]["CUSTOM_FIELD_MAPPER"]
                         if rattr_name in config_cust_field_map.keys():
-                            devicedata[self.custom_field_name_slugger(config_cust_field_map[rattr_name])] = cleaned_val
+                            devicedata[self.custom_field_name_slugger(
+                                config_cust_field_map[rattr_name])] = cleaned_val
                 if rasset:
                     devicedata["asset_tag"] = rasset
                 devicedata["custom_fields"]["rt_id"] = str(rt_object_id)
-                devicedata["custom_fields"][self.custom_field_name_slugger("Visible label")] = str(rname)
+                devicedata["custom_fields"][self.custom_field_name_slugger(
+                    "Visible label")] = str(rname)
 
                 if note:
-                    note = note.replace("\n", "\n\n")  # markdown. all new lines need two new lines
+                    # markdown. all new lines need two new lines
+                    note = note.replace("\n", "\n\n")
 
             if has_problems == "yes":
                 has_problems = True
@@ -2827,7 +2990,8 @@ class DB(object):
                     note = "hardware: " + hardware
 
             if not "tags" in devicedata.keys():
-                rt_tags = self.get_tags_for_obj("object", int(devicedata["custom_fields"]["rt_id"]))
+                rt_tags = self.get_tags_for_obj(
+                    "object", int(devicedata["custom_fields"]["rt_id"]))
                 tags = []
                 # print (self.tag_map)
 
@@ -2836,7 +3000,8 @@ class DB(object):
                         # print(tag)
                         tags.append(self.tag_map[tag]["id"])
                     except:
-                        logger.debug("failed to find tag {} in lookup map".format(tag))
+                        logger.debug(
+                            "failed to find tag {} in lookup map".format(tag))
                 devicedata["tags"] = tags
 
             bad_tags = []
@@ -2849,7 +3014,8 @@ class DB(object):
             if bad_tag:
                 process_object = False
                 name = None
-                logger.info(f"skipping object rt_id:{rt_object_id} as it has tags: {str(bad_tags)}")
+                logger.info(
+                    f"skipping object rt_id:{rt_object_id} as it has tags: {str(bad_tags)}")
                 netbox.remove_device_by_rt_id(str(rt_object_id))
 
             # 0u device logic
@@ -2895,24 +3061,28 @@ class DB(object):
                         vm_host_name = self.vm_hosts[vm_host_id]
                         devicedata.update({"virtual_host": vm_host_name})
                     except KeyError:
-                        logger.debug("ERROR: failed to track down virtual host info")
+                        logger.debug(
+                            "ERROR: failed to track down virtual host info")
                         pass
 
                 d42_rack_id = None
 
                 if rrack_id:
                     print(f"rack name: {rrack_name}")
-                    rack_detail = dict(py_netbox.dcim.racks.get(name=rrack_name))
+                    rack_detail = dict(
+                        py_netbox.dcim.racks.get(name=rrack_name))
                     rack_id = rack_detail["id"]
                     pp.pprint(rack_detail)
                     devicedata.update({"rack": rack_id})
                     devicedata.update({"site": rack_detail["site"]["id"]})
                     if rack_detail["location"]["id"]:
-                        devicedata.update({"location": rack_detail["location"]["id"]})
+                        devicedata.update(
+                            {"location": rack_detail["location"]["id"]})
                     d42_rack_id = rack_id
 
                     # if the device is mounted in RT, we will try to add it to D42 hardwares.
-                    position, height, depth, mount = self.get_hardware_size(dev_id)
+                    position, height, depth, mount = self.get_hardware_size(
+                        dev_id)
                     devicedata.update({"position": position})
                     devicedata.update({"face": mount})
                     # 0u device logic
@@ -2945,12 +3115,14 @@ class DB(object):
                             generic_depth = "short_"
                     devicedata["hardware"] = f"generic_{height}u_{generic_depth}device"
                 logger.debug(devicedata["hardware"])
-                devicedata["device_type"] = netbox.device_type_checker(devicedata["hardware"])
+                devicedata["device_type"] = netbox.device_type_checker(
+                    devicedata["hardware"])
                 if devicedata["device_type"] == None:
                     if not devicedata["hardware"] in self.skipped_devices.keys():
                         self.skipped_devices[devicedata["hardware"]] = 1
                     else:
-                        self.skipped_devices[devicedata["hardware"]] = self.skipped_devices[devicedata["hardware"]] + 1
+                        self.skipped_devices[devicedata["hardware"]
+                                             ] = self.skipped_devices[devicedata["hardware"]] + 1
                     process_object = False
                 # upload device
                 if devicedata and process_object:
@@ -2968,7 +3140,8 @@ class DB(object):
                     if process_object:
                         # pp.pprint("got here")
                         # print("")
-                        ports = self.get_ports_by_device(self.all_ports, dev_id)
+                        ports = self.get_ports_by_device(
+                            self.all_ports, dev_id)
                         print("ports:")
                         pp.pprint(ports)
 
@@ -2991,12 +3164,16 @@ class DB(object):
                                 pp.pprint(get_links)
 
                                 if get_links:
-                                    remote_device_name = self.get_device_by_port(get_links[0])
-                                    switchport_data.update({"remote_device": remote_device_name})
-                                    switchport_data.update({"remote_port": self.get_port_by_id(self.all_ports, get_links[0])})
+                                    remote_device_name = self.get_device_by_port(
+                                        get_links[0])
+                                    switchport_data.update(
+                                        {"remote_device": remote_device_name})
+                                    switchport_data.update(
+                                        {"remote_port": self.get_port_by_id(self.all_ports, get_links[0])})
                                     pp.pprint(switchport_data)
 
-                                    netbox.create_cables_between_devices(switchport_data)
+                                    netbox.create_cables_between_devices(
+                                        switchport_data)
 
                 else:
                     msg = (
@@ -3022,7 +3199,8 @@ class DB(object):
         return_obj = ipv4_ints
         for interface in ipv6_ints.keys():
             if interface in return_obj:
-                return_obj[interface] = return_obj[interface] + ipv6_ints[interface]
+                return_obj[interface] = return_obj[interface] + \
+                    ipv6_ints[interface]
             else:
                 return_obj[interface] = ipv6_ints[interface]
         return return_obj
@@ -3054,7 +3232,8 @@ class DB(object):
 
             if not nic_name in interfaces.keys():
                 interfaces[nic_name] = []
-            interfaces[nic_name].append(f"{ip}/{netbox.get_ip_prefix_size(ip)}")
+            interfaces[nic_name].append(
+                f"{ip}/{netbox.get_ip_prefix_size(ip)}")
         return interfaces
 
     def get_device_ipv6_ints(self, dev_id):
@@ -3082,7 +3261,8 @@ class DB(object):
             ip = self.convert_ip_v6(rawip)
             if not nic_name in interfaces.keys():
                 interfaces[nic_name] = []
-            interfaces[nic_name].append(f"{ip}/{netbox.get_ip_prefix_size(ip)}")
+            interfaces[nic_name].append(
+                f"{ip}/{netbox.get_ip_prefix_size(ip)}")
         return interfaces
 
     def get_device_to_ip(self):
@@ -3119,7 +3299,8 @@ class DB(object):
             netbox.post_ip(devmap)
 
     def get_pdus(self):
-        roles = {str(item.name): dict(item) for item in py_netbox.dcim.device_roles.all()}
+        roles = {str(item.name): dict(item)
+                 for item in py_netbox.dcim.device_roles.all()}
         pp.pprint(roles)
         if not "Power" in roles.keys():
             create_role = {
@@ -3127,7 +3308,8 @@ class DB(object):
                 "slug": "power",
             }
             py_netbox.dcim.device_roles.create(create_role)
-            roles = {str(item.name): dict(item) for item in py_netbox.dcim.device_roles.all()}
+            roles = {str(item.name): dict(item)
+                     for item in py_netbox.dcim.device_roles.all()}
         PDU_DEVICE_ROLE = roles["Power"]["id"]
         if not self.all_ports:
             self.get_ports()
@@ -3185,7 +3367,8 @@ class DB(object):
                         # print(tag)
                         tags.append(self.tag_map[tag]["id"])
                     except:
-                        logger.debug("failed to find tag {} in lookup map".format(tag))
+                        logger.debug(
+                            "failed to find tag {} in lookup map".format(tag))
 
                 bad_tags = []
                 bad_tag = False
@@ -3198,7 +3381,8 @@ class DB(object):
                 if bad_tag:
                     process = False
                     name = None
-                    logger.info(f"skipping object rt_id:{pdu_id} as it has tags: {str(bad_tags)}")
+                    logger.info(
+                        f"skipping object rt_id:{pdu_id} as it has tags: {str(bad_tags)}")
                     continue
                 logger.info(f"pdu_attribs: {pdu_attribs}")
                 if not "hw_type" in pdu_attribs:
@@ -3208,13 +3392,14 @@ class DB(object):
                         pdu_attribs["hw_type"] = "generic_1u_short_device"
                     else:
                         pdu_attribs["hw_type"] = "generic_0u_device"
-                    logger.info(f"HW Type(position check) is: {pdu_attribs['hw_type']}")
+                    logger.info(
+                        f"HW Type(position check) is: {pdu_attribs['hw_type']}")
 
                 # if "%GPASS%" in pdu_attribs['HW type']:
-                print ("!!!\nTESTPRINT   pdu_attribs\n!!!")
-                print(pdu_attribs)  #my line
+                print("!!!\nTESTPRINT   pdu_attribs\n!!!")
+                print(pdu_attribs)  # my line
                 pdu_type = pdu_attribs["hw_type"].replace("%GPASS%", " ")
-                print ("\npdu_type:")
+                print("\npdu_type:")
                 print(pdu_type)
                 del pdu_attribs["hw_type"]
                 print("test1")
@@ -3234,12 +3419,14 @@ class DB(object):
                 pdudata.update({"custom_fields": pdu_attribs})
                 pdudata.update({"asset_tag": asset_num})
                 pdudata.update({"rack": rack_id})
-                pdudata["device_type"] = netbox.device_type_checker(pdudata["pdu_model"])
+                pdudata["device_type"] = netbox.device_type_checker(
+                    pdudata["pdu_model"])
                 if pdudata["device_type"] == None:
                     if not pdudata["pdu_model"] in self.skipped_devices.keys():
                         self.skipped_devices[pdudata["pdu_model"]] = 1
                     else:
-                        self.skipped_devices[pdudata["pdu_model"]] = self.skipped_devices[pdudata["pdu_model"]] + 1
+                        self.skipped_devices[pdudata["pdu_model"]
+                                             ] = self.skipped_devices[pdudata["pdu_model"]] + 1
                     process_object = False
                 pdumodel.update({"name": pdu_type})
                 pdumodel.update({"pdu_model": pdu_type})
@@ -3257,10 +3444,12 @@ class DB(object):
                 if position and process:
                     if pdu_id not in rack_mounted:
                         rack_mounted.append(pdu_id)
-                        position, height, depth, mount = self.get_hardware_size(pdu_id)
+                        position, height, depth, mount = self.get_hardware_size(
+                            pdu_id)
                         if True:
                             # try:
-                            rack_data = netbox.get_rack_by_rt_id(pdudata["rack"])
+                            rack_data = netbox.get_rack_by_rt_id(
+                                pdudata["rack"])
                             print(rack_data)
                             site_id = rack_data["site"]["id"]
                             rack_id = rack_data["id"]
@@ -3289,11 +3478,14 @@ class DB(object):
                                 logger.debug(rdata)
                                 netbox.post_device(rdata)
                                 # netbox.post_pdu_to_rack(rdata, d42_rack_id)
-                                ports = self.get_ports_by_device(self.all_ports, str(pdu_id))
+                                ports = self.get_ports_by_device(
+                                    self.all_ports, str(pdu_id))
 
-                                ip_ints = self.get_devices_ips_ints(str(pdu_id))
+                                ip_ints = self.get_devices_ips_ints(
+                                    str(pdu_id))
                                 # pp.pprint(ip_ints)
-                                netbox.create_device_interfaces(str(pdu_id), ports, ip_ints)
+                                netbox.create_device_interfaces(
+                                    str(pdu_id), ports, ip_ints)
                         # except TypeError:
                         #     msg = (
                         #         '\n-----------------------------------------------------------------------\
@@ -3368,16 +3560,20 @@ class DB(object):
                             )
                             logger.info(msg)
                         if device_added:
-                            ports = self.get_ports_by_device(self.all_ports, str(pdu_id))
+                            ports = self.get_ports_by_device(
+                                self.all_ports, str(pdu_id))
                             ip_ints = self.get_devices_ips_ints(str(pdu_id))
-                            netbox.create_device_interfaces(str(pdu_id), ports, ip_ints)
+                            netbox.create_device_interfaces(
+                                str(pdu_id), ports, ip_ints)
                     else:
-                        logger.error(f"could not find rack for PDU rt_id: {pdu_id}")
+                        logger.error(
+                            f"could not find rack for PDU rt_id: {pdu_id}")
         logger.debug("skipped devices:")
         pp.pprint(self.skipped_devices)
 
     def get_patch_panels(self):
-        roles = {str(item.name): dict(item) for item in py_netbox.dcim.device_roles.all()}
+        roles = {str(item.name): dict(item)
+                 for item in py_netbox.dcim.device_roles.all()}
         pp.pprint(roles)
         if not "Patching" in roles.keys():
             create_role = {
@@ -3385,7 +3581,8 @@ class DB(object):
                 "slug": "patching",
             }
             py_netbox.dcim.device_roles.create(create_role)
-            roles = {str(item.name): dict(item) for item in py_netbox.dcim.device_roles.all()}
+            roles = {str(item.name): dict(item)
+                     for item in py_netbox.dcim.device_roles.all()}
         PATCHING_DEVICE_ROLE = roles["Patching"]["id"]
         if not self.all_ports:
             self.get_ports()
@@ -3453,7 +3650,8 @@ class DB(object):
             # attribs["number_of_ports"] = item[2]
             # attribs["number_of_ports_in_row"] = item[2]
             if item[3]:
-                attribs[self.custom_field_name_slugger("Visible label")] = item[3]
+                attribs[self.custom_field_name_slugger(
+                    "Visible label")] = item[3]
             attribs["rt_id"] = str(item[0])
             payload = {
                 "name": item[1],
@@ -3466,11 +3664,15 @@ class DB(object):
             if item[4]:
                 payload["comments"] = item[4]
             if location_data["rack_mounted"]:
-                payload.update({"position": location_data["position_data"]["u"]})
-                payload.update({"face": location_data["position_data"]["face"]})
-                payload.update({"device_type": netbox.device_type_checker("generic_1u_patch_panel")})
+                payload.update(
+                    {"position": location_data["position_data"]["u"]})
+                payload.update(
+                    {"face": location_data["position_data"]["face"]})
+                payload.update(
+                    {"device_type": netbox.device_type_checker("generic_1u_patch_panel")})
             else:
-                payload.update({"device_type": netbox.device_type_checker("generic_0u_patch_panel")})
+                payload.update(
+                    {"device_type": netbox.device_type_checker("generic_0u_patch_panel")})
             payload.update({"rack": rack_id})
 
             # if port_type is not None:
@@ -3499,9 +3701,12 @@ class DB(object):
                     pp.pprint(get_links)
 
                     if get_links:
-                        remote_device_name = self.get_device_by_port(get_links[0])
-                        switchport_data.update({"remote_device": remote_device_name})
-                        switchport_data.update({"remote_port": self.get_port_by_id(self.all_ports, get_links[0])})
+                        remote_device_name = self.get_device_by_port(
+                            get_links[0])
+                        switchport_data.update(
+                            {"remote_device": remote_device_name})
+                        switchport_data.update(
+                            {"remote_port": self.get_port_by_id(self.all_ports, get_links[0])})
                         pp.pprint(switchport_data)
 
                         netbox.create_cables_between_devices(switchport_data)
@@ -3551,7 +3756,8 @@ class DB(object):
             if get_links:
                 remote_device_name = self.get_device_by_port(get_links[0])
                 switchport_data.update({"remote_device": remote_device_name})
-                switchport_data.update({"remote_port": self.get_port_by_id(self.all_ports, get_links[0])})
+                switchport_data.update(
+                    {"remote_port": self.get_port_by_id(self.all_ports, get_links[0])})
                 pp.pprint(switchport_data)
 
                 netbox.create_cables_between_devices(switchport_data)
@@ -3678,7 +3884,8 @@ class DB(object):
                 bad_tag = True
                 bad_tags.append(tag_check)
         if bad_tag:
-            logger.info(f"object rt_id:{obj_id} as it has tags: {str(bad_tags)}")
+            logger.info(
+                f"object rt_id:{obj_id} as it has tags: {str(bad_tags)}")
             return False, tags
         else:
             return True, tags
@@ -3693,7 +3900,8 @@ class DB(object):
         with self.con:
             cur = self.con.cursor()
             q = f"SELECT * FROM Object "
-            q = q + f"WHERE Object.objtype_id in (1504 {config['Misc']['vm_objtype_ids']}) ORDER BY Object.id desc"
+            q = q + \
+                f"WHERE Object.objtype_id in (1504 {config['Misc']['vm_objtype_ids']}) ORDER BY Object.id desc"
             # q = q + " and Object.id = 7975 "
             # q = q + " limit 20"
             cur.execute(q)
@@ -3712,7 +3920,8 @@ class DB(object):
             if comment:
                 vm_data["comments"] = comment
             vm_data["custom_fields"] = self.get_attribs_for_obj(id)
-            vm_data["custom_fields"][self.custom_field_name_slugger("Visible Label")] = label
+            vm_data["custom_fields"][self.custom_field_name_slugger(
+                "Visible Label")] = label
             vm_data["custom_fields"]["rt_id"] = str(id)
 
             tag_resp = self.get_tags_of_obj_false_if_skip(id)
@@ -3724,7 +3933,8 @@ class DB(object):
 
             # if id in self.container_map.keys():
             if id in self.container_map.keys():
-                vm_data["custom_fields"]["rt_id_parent"] = str(self.container_map[id])
+                vm_data["custom_fields"]["rt_id_parent"] = str(
+                    self.container_map[id])
 
             logger.debug(vm_data)
             netbox.manage_vm(vm_data)
@@ -3732,7 +3942,8 @@ class DB(object):
 
             ip_ints = self.get_devices_ips_ints(id)
             # pp.pprint(ip_ints)
-            netbox.create_device_interfaces(id, ports, ip_ints, True, "virtual")
+            netbox.create_device_interfaces(
+                id, ports, ip_ints, True, "virtual")
             logger.debug(f"end of vm: {id} {name}")
 
     def get_files(self):
@@ -3792,16 +4003,19 @@ class DB(object):
             else:
                 print("I have only one file attached")
             for linkdata in entity_data:
-                filename = linkdata["export_file_name"].split("file_exports/")[1]
+                filename = linkdata["export_file_name"].split(
+                    "file_exports/")[1]
                 description = f"external_file: {linkdata['file_name']}"
                 if not linkdata["file_comment"] == "":
                     comment = f"\n\n{linkdata['file_comment']}"
                 else:
                     comment = ""
-                entity_comment_data = entity_comment_data + f"\n\n[{description}]({config['Misc']['FILE_SEARCH_URI']}{urllib.parse.quote(filename)}){comment}"
+                entity_comment_data = entity_comment_data + \
+                    f"\n\n[{description}]({config['Misc']['FILE_SEARCH_URI']}{urllib.parse.quote(filename)}){comment}"
             entity_comment_data = entity_comment_data.strip("\n\n")
             print(entity_comment_data)
-            update_device = netbox.update_object_file_links(linkdata["entity_type"], linkdata["entity_id"], entity_comment_data)
+            update_device = netbox.update_object_file_links(
+                linkdata["entity_type"], linkdata["entity_id"], entity_comment_data)
             print("")
 
 
@@ -3837,7 +4051,8 @@ if __name__ == "__main__":
     ch.setLevel(logging.DEBUG)
 
     # Format log output
-    formatter = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
+    formatter = logging.Formatter(
+        "%(asctime)s - %(name)s - %(levelname)s - %(message)s")
     fh.setFormatter(formatter)
     ch.setFormatter(formatter)
 
@@ -3857,7 +4072,8 @@ if __name__ == "__main__":
         with open(os.getcwd() + "/" + conf_file_name, "r") as stream:
             device_type_map_preseed = yaml.safe_load(stream)
 
-    py_netbox = pynetbox.api(config["NetBox"]["NETBOX_HOST"], token=config["NetBox"]["NETBOX_TOKEN"])
+    py_netbox = pynetbox.api(
+        config["NetBox"]["NETBOX_HOST"], token=config["NetBox"]["NETBOX_TOKEN"])
 
     tenant_groups = py_netbox.tenancy.tenant_groups.all()
 
