@@ -18,17 +18,17 @@ NetBox:
   NETBOX_HOST: http://netbox:8080
 #:===== Data to Migrate:======== #
 Migrate:
-  TAGS: False
-  CUSTOM_ATTRIBUTES: False
+  TAGS: True
+  CUSTOM_ATTRIBUTES: True
   INFRA: True
-  VLAN: False
-  SUBNETS: False
-  IPS: False
-  HARDWARE: False
-  PATCHPANELS: False
-  PDUS: False
-  VMS: False
-  FILES: False
+  VLAN: True
+  SUBNETS: True
+  IPS: True
+  HARDWARE: True
+  PATCHPANELS: True
+  PDUS: True
+  VMS: True
+  FILES: True
 #:===== Other settings:======== #
 Misc:
   FILE_SEARCH_URI: https://company_name.sharepoint.com/sites/company_name/Shared%20Documents/Shared/folder-name/rt_export/

@@ -1,5 +1,5 @@
 x-docker-data: &netbox-docker-info
-  image: netboxcommunity/netbox:${VERSION-v3.1-1.5.1}
+  image: netboxcommunity/netbox:v3.2
   restart: on-failure
   depends_on:
     - postgres
