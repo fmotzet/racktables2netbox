@@ -31,7 +31,7 @@ cp hardware_map.yaml.sample hardware_map.yaml
 
 ## Credits
 Thanks to [Device42](https://www.device42.com/) who have already written a [RackTables to Device42 migration utility](https://github.com/device42/Racktables-to-Device42-Migration). @goebelmeier was able to use it as a starting point to make this migration script.
-I (ITJamie) forked it and added more data migrations
+ITJamie forked it and added more data migrations. I am trying to get it to work for our operations.
 
 ## License
 racktables2netbox is licensed under MIT license. See [LICENSE.md](LICENSE.md) for more information.
