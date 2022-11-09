@@ -7,6 +7,7 @@ import json
 import logging
 from os import replace
 import pprint
+from unicodedata import name
 import pymysql
 import pynetbox
 import requests
@@ -24,7 +25,7 @@ import re
 import ipcalc
 
 
-class Migrator:
+class Migrator:  
     def slugify(self, text):
         return slugify.slugify(text, max_length=50)
 
@@ -205,6 +206,7 @@ class NETBOX(object):
         slug_id = None
         if str(device_model_name) in device_type_map_preseed["by_key_name"].keys():
             logger.debug("hardware match")
+            print(device_model_name)
             # print(str(devicedata['hardware']))
             nb_slug = device_type_map_preseed["by_key_name"][str(device_model_name)]["slug"]
             if nb_slug in self.device_types:
@@ -411,8 +413,11 @@ class NETBOX(object):
             py_netbox = self.py_netbox
         needs_updating = False
         device_check1 = [item for item in py_netbox.dcim.devices.filter(cf_rt_id=data["custom_fields"]["rt_id"])]
+        print(device_check1)
         if len(device_check1) == 1:
-            if device_check1[0]["custom_fields"]["rt_id"] == data["custom_fields"]["rt_id"]:
+            device_exists = dict(py_netbox.dcim.devices.get(cf_rt_id=data["custom_fields"]["rt_id"]))
+            print(device_exists)
+            if device_exists["custom_fields"]["rt_id"] == data["custom_fields"]["rt_id"]:
                 logger.debug("device already in netbox (via rt_id). sending to update checker")
                 needs_updating = True
                 matched_by = "cf_rt_id"
@@ -429,7 +434,17 @@ class NETBOX(object):
                 logger.debug("device already in netbox (via name). sending to update checker")
                 needs_updating = True
                 matched_by = "name"
-
+        print("test1337")
+        print(needs_updating)
+        print (data)
+        print(data['name'])
+        if 'Patchpanel' in data['name']:
+            data['device_type'] = '29'
+        # if 'Ablage' in data['name']:
+        #     data['device_type'] ='25'
+        #     print("Ablage found")
+        #     return False
+        print (data)
         if needs_updating:
             self.update_device(data, matched_by, py_netbox, has_problems)
 
@@ -437,7 +452,9 @@ class NETBOX(object):
             try:
                 if has_problems:
                     data["status"] = "failed"
-                py_netbox.dcim.devices.create(data)
+                tester = py_netbox.dcim.devices.create(data)
+                print("tester hier ")
+                print(tester)
             except pynetbox.RequestError as e:
                 logger.debug("matched request error")
                 pp.pprint(e.args)
@@ -478,11 +495,16 @@ class NETBOX(object):
     def create_device_interfaces(self, dev_id, dev_ints, ip_ints, force_int_type=False, int_type=None):
         print(f"checking for device via rt_dev_id:{dev_id}")
         nb_device = py_netbox.dcim.devices.get(cf_rt_id=str(dev_id))
-        # print(dict(nb_device))
+        print("nb_device")
+        print((nb_device))
+        print("nb_device type:")
+        print(type(nb_device))
         dev_type = "device"
 
         if isinstance(nb_device, type(None)):
             logger.debug("did not find a device with that rt_id, will check for a vm now")
+            print("rt_id:")
+            print(dev_id)
             nb_device = py_netbox.virtualization.virtual_machines.get(cf_rt_id=dev_id)
             dev_type = "vm"
             if not isinstance(nb_device, type(None)):
@@ -587,6 +609,10 @@ class NETBOX(object):
                             "100gbase-er4": "100gbase-x-qsfp28",
                             "10gbase-er": "10gbase-x-sfpp",
                             "empty x2": "other",
+                            "40gbase-sr4": "40gbase-x-qsfpp",
+                            "hba": "other",
+                            "isdn s0": "other",
+                            "dc": "other",
                         }
                         int_type = dev_int[2].lower().split("dwdm80")[0].split("(")[0].strip()
                         if int_type in map_list.keys():
@@ -770,9 +796,12 @@ class NETBOX(object):
             try:
                 ppGet = all_power_ports[powerport["name"]]
                 logger.debug(f"Power Port Template Exists: {ppGet.name} - " + f"{ppGet.type} - {ppGet.device_type.id} - {ppGet.id}")
+                print("!!!1!!!")
+                breakpoint()
             except KeyError:
                 powerport["device_type"] = deviceType
                 need_power_ports.append(powerport)
+                breakpoint()
 
         if not need_power_ports:
             return
@@ -1104,17 +1133,21 @@ class NETBOX(object):
 
     def get_rack_by_rt_id(self, rt_id):
         nb = self.py_netbox
-        racks = [item for item in nb.dcim.racks.filter(cf_rt_id=rt_id)]
+        racks = dict(nb.dcim.racks.get(cf_rt_id=rt_id))
+        print("racks:")
+        print(racks)
+        print(len(racks))
         logger.debug(racks)
-        if len(racks) == 1:
-            return racks[0]
-        elif len(racks) > 1:
-            for rack in racks:
-                if rack["custom_fields"]["rt_id"] == str(rt_id):
-                    return rack
-            return None
-        else:
-            return None
+        return racks
+        # if len(racks) == 1:
+        #     return racks[0]
+        # elif len(racks) > 1:
+        #     for rack in racks:
+        #         #if rack["custom_fields"]["rt_id"] == str(rt_id):
+        #             return rack
+        #     return None
+        # else:
+        #     return None
 
     def get_site_by_rt_id(self, rt_id):
         nb = self.py_netbox
@@ -1145,57 +1178,77 @@ class NETBOX(object):
             else:
                 site = nb.dcim.sites.get(name=name)
                 site.update(site_data)
+      
+    def create_cable(self, int_1_id, int_2_id,device_a,device_b):
 
-    def create_cable(self, int_1_id, int_2_id):
         nb = self.py_netbox
+        #xyz = nb.dcim.interface.objects.get()
+        object_type_a = device_a["device_type"]
+        object_type_b = device_b["device_type"]
         data = {
             "termination_a_type": "dcim.interface",
-            "termination_a_id": int_1_id,
+            "a_terminations": [{"object_type":object_type_a["display"],"object_id": object_type_a["id"]}],
+
             "termination_b_type": "dcim.interface",
-            "termination_b_id": int_2_id,
+            "b_terminations": [{"object_type":object_type_b["display"],"object_id": object_type_b["id"]}]
+
         }
+        print("data: 1500")
+        pp.pprint(data)
         try:
             created = nb.dcim.cables.create(data)
             pp.pprint(created)
         except Exception as e:
             logger.debug("unable to create cable, usually means a cable already exists...")
             logger.error(e)
+            # breakpoint()
 
     def create_cables_between_devices(self, connection_data):
+        print("connection_data: 1555")
+        pp.pprint(connection_data)
         nb = self.py_netbox
-        local_device_obj = nb.dcim.devices.filter(cf_rt_id=connection_data["local_device_rt_id"])
+        local_device_obj = nb.dcim.devices.filter(cf_rt_id=connection_data ["local_device_rt_id"])
         local_device = {str(item): dict(item) for item in local_device_obj}
         if bool(local_device):
+            print("test")
             local_device = list(local_device.values())[0]
         # local_device_dict = { str(local_device): dict(local_device) }
-        # pp.pprint(local_device)
+        print("local_device:")
+        pp.pprint(local_device)
 
         remote_device_obj = nb.dcim.devices.filter(cf_rt_id=connection_data["remote_device"]["id"])
         remote_device = {str(item): dict(item) for item in remote_device_obj}
         if bool(remote_device):
             remote_device = list(remote_device.values())[0]
         # remote_device = nb.dcim.devices.filter(cf_rt_id=connection_data["remote_device"]["id"])
-        # pp.pprint(remote_device)
-        if bool(local_device) and bool(remote_device):
-
-            local_device_ints_objs = nb.dcim.interfaces.filter(device_id=local_device["id"])
-            local_device_ints = {str(item): item for item in local_device_ints_objs}
-            # pp.pprint(local_device_ints)
-            remote_device_ints_objs = nb.dcim.interfaces.filter(device_id=remote_device["id"])
-            remote_device_ints = {str(item): item for item in remote_device_ints_objs}
-            # pp.pprint(remote_device_ints)
+        print("remote_device:")
+        print(remote_device)
+        print("local device:")
+        print(local_device)
+        if bool (local_device) and bool (remote_device):
+            print("Mashalla, we made it!!")
+            local_device_ints_objs = nb.dcim.interfaces.filter (device_id=local_device["id"])
+            local_device_ints = {str(item): item for item  in local_device_ints_objs}
+            print("local_device_ints: 1341")
+            pp.pprint(local_device_ints)
+            remote_device_ints_objs = nb.dcim.interfaces.filter (device_id=remote_device["id"])
+            remote_device_ints = {str(item): item for item in remote_device_ints_objs }
+            print("remote_device_ints:")
+            pp.pprint(remote_device_ints)
 
             local_port_found = False
 
-            if connection_data["local_port"] in local_device_ints.keys():
-                logger.debug("found local_port in netbox")
+            if connection_data ["local_port"] in local_device_ints.keys():
+                logger.debug ("found local_port in netbox")
                 local_port_found = True
-                local_port = local_device_ints[connection_data["local_port"]]
+                local_port = local_device_ints[connection_data ["local_port"]]
                 # local_port_dict = {str(item): item for item in local_port}
 
             else:
                 logger.error(f"did not find local_port({connection_data['local_port']}) in netbox...")
+
             remote_port_found = False
+
             if connection_data["remote_port"] in remote_device_ints.keys():
                 logger.debug("found remote_port in netbox")
                 remote_port_found = True
@@ -1210,8 +1263,13 @@ class NETBOX(object):
                     remote_port.update({"type": "other"})
                 if str(local_port.type) == "Virtual":
                     local_port.update({"type": "other"})
+                print("Haligalli:")
+                print (local_port.id)
+                print(remote_port.id)
+                pp.pprint(local_device)
+                pp.pprint(remote_device)
                 # the actual meat of the function.... why did it take soo much to get here? definately monday code....
-                self.create_cable(local_port.id, remote_port.id)
+                self.create_cable(local_port.id, remote_port.id, local_device, remote_device)
 
         else:
             logger.warning("remote device doesnt exist in nb yet. connections will be added when it gets added")
@@ -2783,7 +2841,7 @@ class DB(object):
 
             bad_tags = []
             for tag_check in config["Misc"]["SKIP_OBJECTS_WITH_TAGS"].strip().split(","):
-                logger.debug(f"checking for tag '{tag_check}'")
+                logger.debug(f"checking for tag 1 '{tag_check}'")
                 if self.tag_map[tag_check]["id"] in devicedata["tags"]:
                     logger.debug(f"tag matched by id")
                     bad_tag = True
@@ -3132,7 +3190,7 @@ class DB(object):
                 bad_tags = []
                 bad_tag = False
                 for tag_check in config["Misc"]["SKIP_OBJECTS_WITH_TAGS"].strip().split(","):
-                    logger.debug(f"checking for tag '{tag_check}'")
+                    logger.debug(f"checking for tag 2 '{tag_check}'")
                     if self.tag_map[tag_check]["id"] in tags:
                         logger.debug(f"tag matched by id")
                         bad_tag = True
@@ -3153,13 +3211,22 @@ class DB(object):
                     logger.info(f"HW Type(position check) is: {pdu_attribs['hw_type']}")
 
                 # if "%GPASS%" in pdu_attribs['HW type']:
+                print ("!!!\nTESTPRINT   pdu_attribs\n!!!")
+                print(pdu_attribs)  #my line
                 pdu_type = pdu_attribs["hw_type"].replace("%GPASS%", " ")
+                print ("\npdu_type:")
+                print(pdu_type)
                 del pdu_attribs["hw_type"]
+                print("test1")
                 pdu_attribs["rt_id"] = str(pdu_id)
+                print("test2")
                 if "asset_tag" in pdu_attribs.keys():
                     del pdu_attribs["asset_tag"]
+                    print("test3")
 
+                print("test4")
                 pdu_type = self.remove_links(pdu_type[:64])
+                print("test5")
                 name = self.remove_links(name)
                 pdudata.update({"name": name})
                 pdudata.update({"notes": comment})
@@ -3176,8 +3243,8 @@ class DB(object):
                     process_object = False
                 pdumodel.update({"name": pdu_type})
                 pdumodel.update({"pdu_model": pdu_type})
-                # print(pdudata)
-                # print(pdumodel)
+                print(pdudata)
+                print(pdumodel)
                 # print("")
 
                 # post pdus
@@ -3194,6 +3261,7 @@ class DB(object):
                         if True:
                             # try:
                             rack_data = netbox.get_rack_by_rt_id(pdudata["rack"])
+                            print(rack_data)
                             site_id = rack_data["site"]["id"]
                             rack_id = rack_data["id"]
                             if rack_data["location"]["id"]:
