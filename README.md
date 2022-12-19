@@ -1,6 +1,9 @@
 # racktables2netbox
 A [RackTables](https://github.com/racktables/racktables) to [NetBox](https://github.com/digitalocean/netbox) migration utility. This tiny tool should be used to migrate your existing RackTables installations towards NetBox.
 
+!!WARNING!!
+This is what worked for me and our setup, this will most likely not work on your setup.
+
 Reccomended racktables source version 0.21.X
 
 ## Known Issues
